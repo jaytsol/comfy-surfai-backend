@@ -1,4 +1,16 @@
 // src/comfyui/interfaces/comfyui-workflow.interface.ts
+export interface ComfyUIResponse {
+  prompt_id: string;
+  number: number;
+  node_errors: Record<string, any>;
+}
+
+export interface ComfyUIResult {
+  success: boolean;
+  message: string;
+  data: ComfyUIResponse;
+}
+
 export interface ComfyUIInput {
   seed?: number;
   steps?: number;

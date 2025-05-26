@@ -2,7 +2,10 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
-import { ComfyUIInput } from './interfaces/comfyui-workflow.interface';
+import {
+  ComfyUIInput,
+  ComfyUIResponse,
+} from './interfaces/comfyui-workflow.interface';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ComfyUIRequest {
@@ -33,7 +36,7 @@ export class ComfyuiService {
     };
   }
 
-  async sendPromptToComfyUI(workflow: ComfyUIInput) {
+  async sendPromptToComfyUI(workflow: ComfyUIInput): Promise<ComfyUIResponse> {
     try {
       const requestPayload = this.createComfyUIRequest(workflow);
 
@@ -47,7 +50,7 @@ export class ComfyuiService {
           },
         },
       );
-      return response.data;
+      return response.data as ComfyUIResponse;
     } catch (error) {
       console.error('ComfyUI API 호출 중 오류 발생:', error);
       throw error;
