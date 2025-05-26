@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
+import { ComfyuiController } from './comfyui/comfyui.controller';
+import { ComfyuiService } from './comfyui/comfyui.service';
 
 @Module({
   imports: [
@@ -10,7 +12,7 @@ import { ConfigModule } from '@nestjs/config';
       envFilePath: '.env',
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, ComfyuiController],
+  providers: [AppService, ComfyuiService],
 })
 export class AppModule {}
