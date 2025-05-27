@@ -1,7 +1,10 @@
 // src/comfyui/comfyui.controller.ts
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ComfyuiService } from './comfyui.service';
-import { ComfyUIWorkflow } from './interfaces/comfyui-workflow.interface';
+import {
+  ComfyUIResult,
+  ComfyUIWorkflow,
+} from './interfaces/comfyui-workflow.interface';
 
 @Controller('api')
 export class ComfyuiController {
@@ -9,7 +12,7 @@ export class ComfyuiController {
 
   @Post('generate')
   @HttpCode(HttpStatus.OK)
-  async generate(@Body() workflow: ComfyUIWorkflow) {
+  async generate(@Body() workflow: ComfyUIWorkflow): Promise<ComfyUIResult> {
     try {
       const result = await this.comfyuiService.sendPromptToComfyUI(workflow);
       return {
