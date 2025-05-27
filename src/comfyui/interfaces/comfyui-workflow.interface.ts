@@ -45,3 +45,8 @@ export interface ComfyUINode {
 export interface ComfyUIWorkflow {
   [key: string]: ComfyUINode;
 }
+
+export interface ComfyUIWebSocketMessage {
+  type: string;
+  data: ComfyUIResponse;
+}
