@@ -9,7 +9,7 @@ import { OnModuleInit } from '@nestjs/common';
 import { Server, WebSocket } from 'ws';
 
 import { ComfyuiService } from '../comfyui/comfyui.service';
-import { ComfyUIWebSocketMessage } from '../comfyui/interfaces/comfyui-workflow.interface';
+import { ComfyUIWebSocketMessage } from '../interfaces/comfyui-workflow.interface';
 
 @WebSocketGateway({ cors: true, port: 4000 })
 export class EventsGateway implements OnModuleInit {
