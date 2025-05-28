@@ -4,7 +4,7 @@ import { ComfyuiService } from './comfyui.service';
 import {
   ComfyUIResult,
   ComfyUIWorkflow,
-} from './interfaces/comfyui-workflow.interface';
+} from '../interfaces/comfyui-workflow.interface';
 
 @Controller('api')
 export class ComfyuiController {
