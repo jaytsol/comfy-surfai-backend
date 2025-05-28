@@ -6,7 +6,7 @@ import { ComfyuiController } from './comfyui/comfyui.controller';
 import { ComfyuiService } from './comfyui/comfyui.service';
 import { ComfyuiModule } from './comfyui/comfyui.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './auth/entity';
+import { User } from './auth/user.entity';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
