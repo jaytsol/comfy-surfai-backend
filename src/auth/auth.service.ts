@@ -3,7 +3,7 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { CreateUserDto } from '../dto/create-user.dto';
+import { CreateUserDTO } from '../dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async registerUser(
-    createUserDto: CreateUserDto,
+    createUserDto: CreateUserDTO,
   ): Promise<Omit<User, 'password'>> {
     const { username, password } = createUserDto;
 

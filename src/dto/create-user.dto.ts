@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 // src/auth/dto/create-user.dto.ts
-export class CreateUserDto {
+export class CreateUserDTO {
   @IsString()
   @IsNotEmpty({ message: '사용자 이름은 필수입니다.' })
   username: string;
