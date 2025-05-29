@@ -1,7 +1,6 @@
 // src/auth/session.serializer.ts
 import { PassportSerializer } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -38,7 +37,7 @@ export class SessionSerializer extends PassportSerializer {
       if (user) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...userInfo } = user;
-        done(null, userInfo); // 비밀번호 제외하고 사용자 정보 복원
+        done(null, userInfo);
       } else {
         done(null, null);
       }

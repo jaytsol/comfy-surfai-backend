@@ -37,13 +37,6 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Request() req) {
-    console.log('[AuthController.login] Request received');
-    console.log('[AuthController.login] Request headers:', req.headers);
-    console.log('[AuthController.login] Request body:', req.body);
-    console.log('[AuthController.login] Request session:', req.session);
-
-    // LocalAuthGuard -> LocalStrategy.validate -> Passport가 req.user에 사용자 정보 주입 및 세션 생성
-    console.log('[AuthController.login] After LocalAuthGuard');
     return { message: '로그인 성공', user: req.user };
   }
 
@@ -51,7 +44,6 @@ export class AuthController {
   @Get('profile')
   @HttpCode(HttpStatus.OK)
   getProfile(@Request() req) {
-    // AuthenticatedGuard를 통과하면 req.user는 항상 존재
     return { message: '프로필 정보 조회 성공', user: req.user };
   }
 
