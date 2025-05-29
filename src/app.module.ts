@@ -6,8 +6,11 @@ import { ComfyuiController } from './comfyui/comfyui.controller';
 import { ComfyuiService } from './comfyui/comfyui.service';
 import { ComfyuiModule } from './comfyui/comfyui.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './auth/user.entity';
+import { User } from './entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { ConfigService } from '@nestjs/config';
+
+const configService = new ConfigService();
 
 @Module({
   imports: [
@@ -17,11 +20,11 @@ import { AuthModule } from './auth/auth.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432', 10),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+      host: configService.get<string>('DB_HOST') || 'localhost',
+      port: parseInt(configService.get<string>('DB_PORT') || '5432', 10),
+      username: configService.get<string>('DB_USERNAME'),
+      password: configService.get<string>('DB_PASSWORD'),
+      database: configService.get<string>('DB_DATABASE'),
       entities: [User],
       synchronize: true,
       logging: true,
