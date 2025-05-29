@@ -5,14 +5,12 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt'; // 비밀번호 해싱을 위한 라이브러리 (설치 필요: npm install bcrypt)
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private jwtService: JwtService,
   ) {}
 
   async registerUser(
@@ -63,11 +61,5 @@ export class AuthService {
       return result;
     }
     return null;
-  }
-
-  async login(user: User): Promise<{ token: string }> {
-    const payload = { username: user.username, role: user.role };
-    const token = await this.jwtService.signAsync(payload);
-    return { token };
   }
 }
