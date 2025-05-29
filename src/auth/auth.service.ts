@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import * as bcrypt from 'bcrypt'; // 비밀번호 해싱을 위한 라이브러리 (설치 필요: npm install bcrypt)
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
