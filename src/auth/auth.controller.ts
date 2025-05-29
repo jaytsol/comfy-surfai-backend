@@ -33,12 +33,17 @@ export class AuthController {
     };
   }
 
-  @UseGuards(LocalAuthGuard) // LocalStrategy 실행
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  // async login(@Request() req, @Body() loginDto: LoginDto) { // loginDto는 LocalAuthGuard가 사용하므로 명시적 사용은 X
   login(@Request() req) {
+    console.log('[AuthController.login] Request received');
+    console.log('[AuthController.login] Request headers:', req.headers);
+    console.log('[AuthController.login] Request body:', req.body);
+    console.log('[AuthController.login] Request session:', req.session);
+
     // LocalAuthGuard -> LocalStrategy.validate -> Passport가 req.user에 사용자 정보 주입 및 세션 생성
+    console.log('[AuthController.login] After LocalAuthGuard');
     return { message: '로그인 성공', user: req.user };
   }
 

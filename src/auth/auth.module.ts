@@ -10,7 +10,10 @@ import { LocalStrategy } from './strategies/local.strategy';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    PassportModule.register({ session: true }),
+    PassportModule.register({
+      session: true,
+      defaultStrategy: 'local',
+    }),
   ],
   providers: [AuthService, SessionSerializer, LocalStrategy],
   controllers: [AuthController],
