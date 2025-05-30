@@ -30,7 +30,7 @@ interface ComfyUIErrorResponseData {
 }
 
 @Injectable()
-export class ComfyuiService implements OnModuleInit {
+export class ComfyUIService implements OnModuleInit {
   private comfyuiUrl: string;
   private comfyuiWsUrl: string;
   private authHeader: string;
