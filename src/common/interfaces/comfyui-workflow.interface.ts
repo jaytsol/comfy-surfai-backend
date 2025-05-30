@@ -1,4 +1,4 @@
-// src/comfyui/interfaces/comfyui-workflow.interface.ts
+// src/common/interfaces/comfyui-workflow.interface.ts
 export interface ComfyUIResponse {
   prompt_id: string;
   number: number;

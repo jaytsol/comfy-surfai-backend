@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { ComfyuiController } from './comfyui/comfyui.controller';
-import { ComfyuiService } from './comfyui/comfyui.service';
-import { ComfyuiModule } from './comfyui/comfyui.module';
+import { ComfyUIController } from './comfyui/comfyui.controller';
+import { ComfyUIService } from './comfyui/comfyui.service';
+import { ComfyUIModule } from './comfyui/comfyui.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { User } from './common/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
 
@@ -30,9 +30,9 @@ const configService = new ConfigService();
       logging: true,
     }),
     AuthModule,
-    ComfyuiModule,
+    ComfyUIModule,
   ],
-  controllers: [AppController, ComfyuiController],
-  providers: [AppService, ComfyuiService],
+  controllers: [AppController, ComfyUIController],
+  providers: [AppService, ComfyUIService],
 })
 export class AppModule {}

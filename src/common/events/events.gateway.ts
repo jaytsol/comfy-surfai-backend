@@ -8,19 +8,19 @@ import {
 import { OnModuleInit } from '@nestjs/common';
 import { Server, WebSocket } from 'ws';
 
-import { ComfyuiService } from '../comfyui/comfyui.service';
-import { ComfyUIWebSocketMessage } from '../interfaces/comfyui-workflow.interface';
+import { ComfyUIService } from 'src/comfyui/comfyui.service';
+import { ComfyUIWebSocketMessage } from 'src/common/interfaces/comfyui-workflow.interface';
 
 @WebSocketGateway({ cors: true, port: 4000 })
 export class EventsGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  constructor(private comfyuiService: ComfyuiService) {}
+  constructor(private comfyuiService: ComfyUIService) {}
 
   onModuleInit() {
     console.log(
-      'EventsGateway initialized. Subscribing to ComfyuiService messages...',
+      'EventsGateway initialized. Subscribing to ComfyUIService messages...',
     );
     this.comfyuiService.wsMessage$.on(
       'message',

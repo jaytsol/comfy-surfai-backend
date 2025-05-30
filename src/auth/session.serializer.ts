@@ -1,7 +1,7 @@
 // src/auth/session.serializer.ts
 import { PassportSerializer } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { User } from '../entities/user.entity';
+import { User } from '../common/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 

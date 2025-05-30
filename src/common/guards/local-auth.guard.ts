@@ -1,4 +1,4 @@
-// src/auth/guards/local-auth.guard.ts
+// src/common/guards/local-auth.guard.ts
 import {
   Injectable,
   ExecutionContext,
