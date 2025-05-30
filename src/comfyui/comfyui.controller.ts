@@ -8,15 +8,15 @@ import {
   UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
-import { ComfyuiService } from './comfyui.service';
+import { ComfyuiService } from 'src/comfyui/comfyui.service';
 import {
   ComfyUIResult,
   ComfyUIWorkflow,
-} from '../interfaces/comfyui-workflow.interface';
-import { AuthenticatedGuard } from 'src/guards/authenticated.guard';
-import { RolesGuard } from 'src/guards/roles.guard';
-import { Role } from 'src/enums/role.enum';
-import { Roles } from 'src/decorators/roles.decorator';
+} from 'src/common/interfaces/comfyui-workflow.interface';
+import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Role } from 'src/common/enums/role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('api')
 export class ComfyuiController {

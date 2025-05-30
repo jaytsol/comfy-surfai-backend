@@ -11,7 +11,7 @@ import {
   ComfyUIInput,
   ComfyUIResponse,
   ComfyUIWebSocketMessage,
-} from '../interfaces/comfyui-workflow.interface';
+} from 'src/common/interfaces/comfyui-workflow.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'ws';
 import { EventEmitter } from 'events';

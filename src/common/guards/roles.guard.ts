@@ -1,4 +1,4 @@
-// src/auth/guards/roles.guard.ts
+// src/common/guards/roles.guard.ts
 import {
   Injectable,
   CanActivate,
@@ -6,8 +6,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common'; // ForbiddenException 추가
 import { Reflector } from '@nestjs/core';
-import { Role } from 'src/enums/role.enum'; // Role Enum 경로에 맞게 수정
-import { ROLES_KEY } from 'src/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum'; // Role Enum 경로에 맞게 수정
+import { ROLES_KEY } from 'src/common/decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

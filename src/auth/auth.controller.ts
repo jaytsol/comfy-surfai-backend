@@ -13,9 +13,9 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response as ExpressResponse } from 'express'; // 타입 명확성을 위해 alias 사용
-import { AuthenticatedGuard } from 'src/guards/authenticated.guard';
-import { LocalAuthGuard } from 'src/guards/local-auth.guard';
-import { CreateUserDTO } from 'src/dto/create-user.dto';
+import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
+import { LocalAuthGuard } from 'src/common/guards/local-auth.guard';
+import { CreateUserDTO } from 'src/common/dto/create-user.dto';
 
 @Controller('auth')
 export class AuthController {

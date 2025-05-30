@@ -1,4 +1,4 @@
-// src/auth/dto/login.dto.ts
+// src/common/dto/login.dto.ts
 import { IsString, IsNotEmpty } from 'class-validator';
 
 export class LoginDTO {
