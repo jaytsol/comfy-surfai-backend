@@ -1,10 +1,22 @@
 // src/comfyui/comfyui.controller.ts
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ComfyuiService } from './comfyui.service';
 import {
   ComfyUIResult,
   ComfyUIWorkflow,
 } from '../interfaces/comfyui-workflow.interface';
+import { AuthenticatedGuard } from 'src/guards/authenticated.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Role } from 'src/enums/role.enum';
+import { Roles } from 'src/decorators/roles.decorator';
 
 @Controller('api')
 export class ComfyuiController {
@@ -12,6 +24,8 @@ export class ComfyuiController {
 
   @Post('generate')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(Role.Admin)
   async generate(@Body() workflow: ComfyUIWorkflow): Promise<ComfyUIResult> {
     try {
       const result = await this.comfyuiService.sendPromptToComfyUI(workflow);
@@ -22,6 +36,9 @@ export class ComfyuiController {
       };
     } catch (error) {
       console.error('ComfyUI 작업 요청 실패:', error);
+      if (error instanceof ForbiddenException) {
+        throw error;
+      }
       throw new Error('Failed to send prompt to ComfyUI');
     }
   }
