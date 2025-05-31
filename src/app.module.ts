@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './common/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
+import { WorkflowModule } from './workflow/workflow.module';
 
 const configService = new ConfigService();
 
@@ -31,6 +32,7 @@ const configService = new ConfigService();
     }),
     AuthModule,
     ComfyUIModule,
+    WorkflowModule,
   ],
   controllers: [AppController, ComfyUIController],
   providers: [AppService, ComfyUIService],
