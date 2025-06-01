@@ -9,6 +9,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './common/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
+import { WorkflowModule } from './workflow/workflow.module';
+import { Workflow } from './common/entities/workflow.entity';
 
 const configService = new ConfigService();
 
@@ -25,12 +27,13 @@ const configService = new ConfigService();
       username: configService.get<string>('DB_USERNAME'),
       password: configService.get<string>('DB_PASSWORD'),
       database: configService.get<string>('DB_DATABASE'),
-      entities: [User],
+      entities: [User, Workflow],
       synchronize: true,
       logging: true,
     }),
     AuthModule,
     ComfyUIModule,
+    WorkflowModule,
   ],
   controllers: [AppController, ComfyUIController],
   providers: [AppService, ComfyUIService],

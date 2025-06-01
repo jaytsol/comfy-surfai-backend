@@ -21,6 +21,14 @@ async function bootstrap() {
     }),
   );
 
+  // CORS 설정 추가
+  app.enableCors({
+    origin: 'http://localhost:4000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+  });
+
   const PGStore = connectPgSimple(session);
   const sessionStore = new PGStore({
     conString: configService.get<string>('DATABASE_URL'),
