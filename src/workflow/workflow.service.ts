@@ -150,25 +150,29 @@ export class WorkflowService {
   /**
    * 특정 워크플로우 템플릿을 삭제합니다. (Admin 전용)
    * @param id 삭제할 템플릿의 ID
-   * @param adminUserId 삭제 작업을 수행하는 관리자 ID
+   * @param adminUserId 삭제 작업을 수행하는 관리자 ID (로깅 또는 추가 권한 검증용)
    * @throws NotFoundException 해당 ID의 템플릿이 없거나 템플릿이 아닌 경우
    */
   async removeTemplate(id: number, adminUserId: number): Promise<void> {
-    // 먼저 해당 ID의 '템플릿'이 존재하는지 확인 (findOneTemplateById가 NotFoundException 처리)
+    // 먼저 해당 ID의 '템플릿'이 존재하는지 확인합니다.
+    // findOneTemplateById 메소드는 템플릿을 찾지 못하면 NotFoundException을 발생시킵니다.
     const templateToRemove = await this.findOneTemplateById(id);
 
-    // (선택적) 추가적인 삭제 권한 검증 로직
-    // if (templateToRemove.ownerUserId !== adminUserId) {
+    // (선택적) 추가적인 삭제 권한 검증 로직이 필요하다면 여기에 구현합니다.
+    // 예를 들어, 특정 관리자만 삭제 가능하게 하거나, 생성한 관리자만 삭제할 수 있도록 하는 규칙 등입니다.
+    // if (templateToRemove.ownerUserId !== adminUserId && ! /* 사용자의 슈퍼 관리자 여부 확인 등 */ ) {
     //   throw new ForbiddenException('You do not have permission to remove this template.');
     // }
     console.log(
-      `[WorkflowService] Admin #${adminUserId} is removing template #${id}.`,
+      `[WorkflowService] Admin #${adminUserId} is removing template #${id} named "${templateToRemove.name}".`,
     );
 
-    // 이 템플릿을 sourceTemplateId로 참조하는 사용자 정의 워크플로우가 있다면,
-    // 그들의 sourceTemplateId는 Workflow 엔티티의 onDelete: 'SET NULL' 설정에 따라 null이 됩니다.
-    // 또는 onDelete: 'CASCADE'로 설정했다면 함께 삭제됩니다. (엔티티 관계 설정 확인 필요)
+    // TypeORM의 remove 메소드는 엔티티 인스턴스를 받아 삭제합니다.
+    // 연관된 관계(예: 이 템플릿을 참조하는 '나만의 워크플로우' 인스턴스)에 대한 처리는
+    // Workflow 엔티티의 @ManyToOne 또는 @OneToMany 데코레이터의 onDelete 옵션 ('SET NULL', 'CASCADE' 등)에 따라 달라집니다.
+    // 현재 Workflow 엔티티의 sourceTemplate 관계에 onDelete: 'SET NULL'이 설정되어 있다면,
+    // 이 템플릿을 참조하는 다른 Workflow 인스턴스들의 sourceTemplateId가 NULL로 설정됩니다.
     await this.workflowRepository.remove(templateToRemove);
-    // 결과로 아무것도 반환하지 않으므로 void 타입 (컨트롤러에서 @HttpCode(HttpStatus.NO_CONTENT) 사용)
+    // void를 반환하므로, 별도의 return 문이 없습니다.
   }
 }
