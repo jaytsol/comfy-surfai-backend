@@ -53,9 +53,9 @@ async function bootstrap() {
 
   // Swagger
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('이미지 생성 및 관리 API') // API 문서의 제목
+    .setTitle('Surfai APIs') // API 문서의 제목
     .setDescription(
-      'NestJS와 ComfyUI를 연동한 이미지 생성 및 관리 서비스 API 문서입니다.',
+      'NestJS와 ComfyUI를 연동한 AI 이미지 및 비디오 생성 서비스 Surfai의 API 문서입니다.',
     ) // API에 대한 설명
     .setVersion('1.0') // API 버전
     .addCookieAuth('connect.sid') // 세션 쿠키 인증 방식 명시 (선택 사항이지만 유용)
