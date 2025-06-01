@@ -10,7 +10,8 @@ import {
   Patch,
   Param,
   NotFoundException,
-  ParseIntPipe, // req.user.id를 가져오기 위해
+  ParseIntPipe,
+  Get, // req.user.id를 가져오기 위해
 } from '@nestjs/common';
 import { WorkflowService } from './workflow.service'; // 곧 생성할 서비스
 import { AuthenticatedGuard } from '../common/guards/authenticated.guard'; // 경로 확인 및 수정 필요
@@ -80,6 +81,31 @@ export class WorkflowController {
     // 이 변환 로직은 서비스 내부에 있거나, 별도의 매퍼 함수/클래스를 사용할 수 있습니다.
     // 여기서는 간단히 서비스가 변환된 DTO를 반환한다고 가정하거나, 직접 매핑합니다.
     return this.mapWorkflowToResponseDTO(newWorkflowTemplate);
+  }
+
+  @Get() // GET /workflow-templates
+  @ApiOperation({ summary: '모든 워크플로우 템플릿 목록 조회 (Admin 전용)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '워크플로우 템플릿 목록을 반환합니다.',
+    type: [WorkflowTemplateResponseDTO], // 응답이 DTO 배열임을 명시
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: '인증되지 않음',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: '권한 없음 (Admin 역할 필요)',
+  })
+  async findAllTemplates() // @Query() query: ListWorkflowTemplatesQueryDto, // 향후 페이지네이션/필터링 사용 시
+  : Promise<WorkflowTemplateResponseDTO[]> {
+    const workflowEntities =
+      await this.workflowService.findAllTemplates(/* query */);
+    // 여러 엔티티를 각각 DTO로 변환
+    return workflowEntities.map((workflow) =>
+      this.mapWorkflowToResponseDTO(workflow),
+    );
   }
 
   @Patch(':id') // PATCH /workflow-templates/:id
