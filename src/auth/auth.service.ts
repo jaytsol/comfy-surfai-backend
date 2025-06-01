@@ -14,9 +14,9 @@ export class AuthService {
   ) {}
 
   async registerUser(
-    createUserDto: CreateUserDTO,
+    createUserDTO: CreateUserDTO,
   ): Promise<Omit<User, 'password'>> {
-    const { username, password } = createUserDto;
+    const { username, password } = createUserDTO;
 
     const existingUser = await this.usersRepository.findOne({
       where: { username },

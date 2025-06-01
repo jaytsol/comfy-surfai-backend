@@ -36,8 +36,8 @@ export class AuthController {
     status: HttpStatus.CONFLICT,
     description: '이미 사용 중인 사용자 이름입니다.',
   })
-  async register(@Body() createUserDto: CreateUserDTO) {
-    const user = await this.authService.registerUser(createUserDto);
+  async register(@Body() createUserDTO: CreateUserDTO) {
+    const user = await this.authService.registerUser(createUserDTO);
     return {
       message: '사용자가 성공적으로 등록되었습니다.',
       userId: user.id,
