@@ -108,6 +108,39 @@ export class WorkflowController {
     );
   }
 
+  // --- 특정 워크플로우 템플릿 상세 조회 ---
+  @Get(':id') // GET /workflow-templates/:id
+  @ApiOperation({ summary: '특정 워크플로우 템플릿 상세 조회 (Admin 전용)' })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: '조회할 워크플로우 템플릿의 ID',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '워크플로우 템플릿 상세 정보를 반환합니다.',
+    type: WorkflowTemplateResponseDTO,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: '해당 ID의 템플릿을 찾을 수 없습니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: '인증되지 않음',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: '권한 없음 (Admin 역할 필요)',
+  })
+  async findOneTemplate(
+    @Param('id', ParseIntPipe) id: number, // 경로 파라미터 'id'를 숫자로 변환 및 유효성 검사
+  ): Promise<WorkflowTemplateResponseDTO> {
+    const workflowEntity = await this.workflowService.findOneTemplateById(id);
+    // 서비스에서 NotFoundException을 던지므로, 여기서는 성공 시 DTO 변환만 처리
+    return this.mapWorkflowToResponseDTO(workflowEntity);
+  }
+
   @Patch(':id') // PATCH /workflow-templates/:id
   @ApiOperation({ summary: '기존 워크플로우 템플릿 수정 (Admin 전용)' })
   @ApiParam({ name: 'id', type: Number, description: '수정할 템플릿 ID' })
