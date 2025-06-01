@@ -7,6 +7,7 @@ import connectPgSimple from 'connect-pg-simple';
 import passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -60,7 +61,10 @@ async function bootstrap() {
     .addCookieAuth('connect.sid') // 세션 쿠키 인증 방식 명시 (선택 사항이지만 유용)
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, swaggerConfig, {
+    extraModels: [WorkflowParameterMappingItemDTO],
+  });
+
   SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true, // 인증 상태 유지 (페이지 새로고침 시에도)
