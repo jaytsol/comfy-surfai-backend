@@ -6,12 +6,10 @@ import {
   IsOptional,
   IsBoolean,
   IsArray,
-  ValidateNested, // 객체 내부의 DTO도 유효성 검사
   MaxLength,
   IsUrl, // URL 형식 검사
   IsDefined, // definition은 객체여야 하며, 비어있지 않아야 함 (IsNotEmpty는 객체에 부적합할 수 있음)
 } from 'class-validator';
-import { Type } from 'class-transformer'; // @ValidateNested와 함께 사용
 import { WorkflowParameterMappingItemDTO } from './workflow-parameter-mapping-item.dto';
 
 export class CreateWorkflowTemplateDTO {
@@ -59,8 +57,6 @@ export class CreateWorkflowTemplateDTO {
   })
   @IsObject({ message: '파라미터 맵은 객체 형태여야 합니다.' })
   @IsOptional()
-  @ValidateNested({ each: true }) // Record의 각 value (WorkflowParameterMappingItemDTO)를 검증
-  @Type(() => WorkflowParameterMappingItemDTO)
   parameter_map?: Record<string, WorkflowParameterMappingItemDTO>;
 
   @ApiPropertyOptional({

@@ -112,7 +112,7 @@ export class WorkflowController {
   })
   async updateTemplate(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: UpdateWorkflowTemplateDTO,
+    @Body() updateDTO: UpdateWorkflowTemplateDTO,
     @Request() req,
   ): Promise<WorkflowTemplateResponseDTO> {
     const adminUserId = req.user.id; // 현재 요청을 보낸 관리자의 ID
@@ -120,7 +120,7 @@ export class WorkflowController {
     // WorkflowService의 updateTemplate 메소드 호출
     const updatedWorkflowEntity = await this.workflowService.updateTemplate(
       id,
-      updateDto,
+      updateDTO,
       adminUserId, // 수정 작업을 수행한 관리자 ID (로깅 또는 추가 권한 검증에 사용 가능)
     );
 
@@ -128,15 +128,15 @@ export class WorkflowController {
     // 또는 try-catch로 서비스에서 발생한 특정 예외를 여기서 다른 HTTP 예외로 변환할 수도 있습니다.
 
     // 업데이트된 엔티티를 응답 DTO로 변환하여 반환
-    return this.mapWorkflowToResponseDto(updatedWorkflowEntity);
+    return this.mapWorkflowToResponseDTO(updatedWorkflowEntity);
   }
 
   // ... removeTemplate 메소드는 이전 답변 참고 ...
 
-  // Helper method to map Workflow entity to WorkflowTemplateResponseDto
+  // Helper method to map Workflow entity to WorkflowTemplateResponseDTO
   // 이전에 createTemplate 메소드에 추가했던 DTO 매핑 함수입니다.
   // 일관성을 위해 이 함수를 사용하거나, class-transformer 등의 라이브러리를 고려할 수 있습니다.
-  private mapWorkflowToResponseDto(
+  private mapWorkflowToResponseDTO(
     workflow: Workflow,
   ): WorkflowTemplateResponseDTO {
     if (!workflow) {
@@ -147,30 +147,7 @@ export class WorkflowController {
       );
     }
 
-    // WorkflowTemplateResponseDto 정의에 맞게 필드 매핑
-    const responseDto = new WorkflowTemplateResponseDTO();
-    responseDto.id = workflow.id;
-    responseDto.name = workflow.name;
-    responseDto.description = workflow.description;
-    responseDto.definition = workflow.definition || {};
-    responseDto.parameter_map = workflow.parameter_map;
-    responseDto.previewImageUrl = workflow.previewImageUrl;
-    responseDto.tags = workflow.tags;
-    responseDto.isPublicTemplate = workflow.isPublicTemplate;
-    responseDto.ownerUserId = workflow.ownerUserId; // DTO에서 optional 이므로, 값이 없으면 undefined가 됨
-    responseDto.createdAt = workflow.createdAt;
-    responseDto.updatedAt = workflow.updatedAt;
-
-    return responseDto;
-  }
-
-  // 임시 DTO 매핑 함수 (실제로는 더 정교하게 구현하거나 class-transformer 사용)
-  private mapWorkflowToResponseDTO(
-    workflow: Workflow,
-  ): WorkflowTemplateResponseDTO {
-    // 주의: 이 함수는 Workflow 엔티티의 모든 필드를 알고 있어야 하며,
-    // WorkflowTemplateResponseDTO의 정의와 일치해야 합니다.
-    // 실제 프로덕션에서는 class-transformer 같은 라이브러리 사용을 고려하세요.
+    // WorkflowTemplateResponseDTO 정의에 맞게 필드 매핑
     const responseDTO = new WorkflowTemplateResponseDTO();
     responseDTO.id = workflow.id;
     responseDTO.name = workflow.name;
@@ -180,9 +157,10 @@ export class WorkflowController {
     responseDTO.previewImageUrl = workflow.previewImageUrl;
     responseDTO.tags = workflow.tags;
     responseDTO.isPublicTemplate = workflow.isPublicTemplate;
-    responseDTO.ownerUserId = workflow.ownerUserId; // 엔티티에 ownerUserId가 있다고 가정
+    responseDTO.ownerUserId = workflow.ownerUserId; // DTO에서 optional 이므로, 값이 없으면 undefined가 됨
     responseDTO.createdAt = workflow.createdAt;
     responseDTO.updatedAt = workflow.updatedAt;
+
     return responseDTO;
   }
 }

@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { Workflow } from 'src/common/entities/workflow.entity'; // 사용자님의 경로에 맞게 수정되었는지 확인
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto'; // 사용자님의 경로에 맞게 수정되었는지 확인
 import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
+import { plainToInstance } from 'class-transformer';
+import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { validate } from 'class-validator';
 // import { ListWorkflowTemplatesQueryDTO } from '../common/dto/workflow/list-workflow-templates-query.dto'; // 향후 페이지네이션/필터링용
 
 @Injectable()
@@ -26,6 +33,29 @@ export class WorkflowService {
     console.log(
       `[WorkflowService] Admin #${adminUserId} is creating a new template: ${createDTO.name}`,
     );
+    if (createDTO.parameter_map) {
+      for (const key in createDTO.parameter_map) {
+        if (
+          Object.prototype.hasOwnProperty.call(createDTO.parameter_map, key)
+        ) {
+          const item = createDTO.parameter_map[key];
+          // plainToInstance를 사용하여 일반 객체를 DTO 클래스 인스턴스로 변환
+          const itemDTO = plainToInstance(
+            WorkflowParameterMappingItemDTO,
+            item,
+          );
+          const errors = await validate(itemDTO);
+          if (errors.length > 0) {
+            // 실제로는 더 상세한 에러 메시지 조합 필요
+            throw new BadRequestException(
+              `Parameter map validation failed for key "${key}": ${errors.toString()}`,
+            );
+          }
+          // 검증된 DTO로 다시 할당 (타입 변환 등이 적용되었을 수 있음)
+          createDTO.parameter_map[key] = itemDTO;
+        }
+      }
+    }
     const workflowData: DeepPartial<Workflow> = {
       name: createDTO.name,
       description: createDTO.description,
