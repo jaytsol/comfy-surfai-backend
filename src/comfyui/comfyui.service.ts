@@ -199,6 +199,19 @@ export class ComfyUIService implements OnModuleInit {
 
     // 3. 전달받은 parameters를 parameter_map을 참조하여 modifiedDefinition에 적용
     if (generateDTO.parameters && parameterMap) {
+      // Validate parameters against parameterMap
+      const unknownParams = Object.keys(generateDTO.parameters).filter(
+        (paramKey) =>
+          !Object.prototype.hasOwnProperty.call(parameterMap, paramKey),
+      );
+
+      if (unknownParams.length > 0) {
+        throw new HttpException(
+          `Unknown parameters found: ${unknownParams.join(', ')}. Valid parameters are: ${Object.keys(parameterMap).join(', ')}`,
+          400,
+        );
+      }
+
       console.log(
         '[ComfyUIService] Applying dynamic parameters to workflow template:',
         generateDTO.parameters,
