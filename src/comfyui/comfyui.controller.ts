@@ -54,14 +54,14 @@ export class ComfyUIController {
     description: '요청한 템플릿 ID를 찾을 수 없음',
   })
   async generate(
-    @Body() generateDto: GenerateImageDTO, // ✨ GenerateImageDto 사용
+    @Body() generateDTO: GenerateImageDTO, // ✨ GenerateImageDTO 사용
     @Request() req,
   ): Promise<any> {
     // Promise<ComfyUIResult> 등으로 실제 반환 타입 명시
     const adminUserId = req.user.id;
     try {
       const result = await this.comfyuiService.generateImageFromTemplate(
-        generateDto,
+        generateDTO,
         adminUserId,
       );
       // 성공 응답 구조는 ComfyUI 실제 결과에 맞게 조정

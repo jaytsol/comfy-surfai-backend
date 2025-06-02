@@ -168,24 +168,24 @@ export class ComfyUIService implements OnModuleInit {
   // ✨ --- 새로 추가될 메소드 --- ✨
   /**
    * 워크플로우 템플릿과 동적 파라미터를 사용하여 이미지를 생성합니다.
-   * @param generateDto templateId와 동적 파라미터 포함
+   * @param generateDTO templateId와 동적 파라미터 포함
    * @param adminUserId 요청을 보낸 관리자 ID (로깅 등에 사용)
    * @returns ComfyUI 처리 결과 (ComfyUIResponse 타입)
    */
   async generateImageFromTemplate(
-    generateDto: GenerateImageDTO,
+    generateDTO: GenerateImageDTO,
     adminUserId: number,
   ): Promise<ComfyUIResponse> {
     // 반환 타입을 ComfyUIResponse로 명시
     console.log(
-      `[ComfyUIService] Admin #${adminUserId} requested image generation using templateId: ${generateDto.templateId} with parameters:`,
-      generateDto.parameters,
+      `[ComfyUIService] Admin #${adminUserId} requested image generation using templateId: ${generateDTO.templateId} with parameters:`,
+      generateDTO.parameters,
     );
 
     // 1. WorkflowService를 사용하여 템플릿 정보 가져오기
     //    findOneTemplateById는 템플릿이 없으면 NotFoundException을 던집니다.
     const template = await this.workflowService.findOneTemplateById(
-      generateDto.templateId,
+      generateDTO.templateId,
     );
 
     // template.definition은 object 타입, ComfyUIInput 타입으로 간주 (필요시 유효성 검사 추가)
@@ -198,17 +198,17 @@ export class ComfyUIService implements OnModuleInit {
     );
 
     // 3. 전달받은 parameters를 parameter_map을 참조하여 modifiedDefinition에 적용
-    if (generateDto.parameters && parameterMap) {
+    if (generateDTO.parameters && parameterMap) {
       console.log(
         '[ComfyUIService] Applying dynamic parameters to workflow template:',
-        generateDto.parameters,
+        generateDTO.parameters,
       );
-      for (const paramKey in generateDto.parameters) {
+      for (const paramKey in generateDTO.parameters) {
         if (
-          Object.prototype.hasOwnProperty.call(generateDto.parameters, paramKey)
+          Object.prototype.hasOwnProperty.call(generateDTO.parameters, paramKey)
         ) {
           const mappingInfo = parameterMap[paramKey]; // 예: { node_id: "6", input_name: "text" }
-          const paramValue = generateDto.parameters[paramKey];
+          const paramValue = generateDTO.parameters[paramKey];
 
           if (mappingInfo) {
             const { node_id, input_name } = mappingInfo;
@@ -235,7 +235,7 @@ export class ComfyUIService implements OnModuleInit {
           }
         }
       }
-    } else if (generateDto.parameters && !parameterMap) {
+    } else if (generateDTO.parameters && !parameterMap) {
       console.warn(
         '[ComfyUIService] Parameters provided for generation, but the template has no parameter_map defined. Parameters will be ignored.',
       );
@@ -263,7 +263,7 @@ export class ComfyUIService implements OnModuleInit {
       // sendPromptToComfyUI 내부에서 이미 HttpException으로 변환하여 던지므로,
       // 여기서는 추가적인 로깅을 하거나 그대로 다시 던질 수 있습니다.
       console.error(
-        `[ComfyUIService] Error during ComfyUI interaction for templateId ${generateDto.templateId}:`,
+        `[ComfyUIService] Error during ComfyUI interaction for templateId ${generateDTO.templateId}:`,
         error.message,
       );
       // 에러는 이미 HttpException 형태일 것이므로 그대로 throw
