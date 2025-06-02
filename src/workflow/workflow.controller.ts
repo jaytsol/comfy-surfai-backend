@@ -11,7 +11,8 @@ import {
   Param,
   NotFoundException,
   ParseIntPipe,
-  Get, // req.user.id를 가져오기 위해
+  Get,
+  Delete, // req.user.id를 가져오기 위해
 } from '@nestjs/common';
 import { WorkflowService } from './workflow.service'; // 곧 생성할 서비스
 import { AuthenticatedGuard } from '../common/guards/authenticated.guard'; // 경로 확인 및 수정 필요
@@ -188,6 +189,40 @@ export class WorkflowController {
 
     // 업데이트된 엔티티를 응답 DTO로 변환하여 반환
     return this.mapWorkflowToResponseDTO(updatedWorkflowEntity);
+  }
+
+  // --- 워크플로우 템플릿 삭제 ---
+  @Delete(':id') // DELETE /workflow-templates/:id
+  @HttpCode(HttpStatus.NO_CONTENT) // 성공 시 204 No Content 상태 코드 반환
+  @ApiOperation({ summary: '워크플로우 템플릿 삭제 (Admin 전용)' })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: '삭제할 워크플로우 템플릿의 ID',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: '워크플로우 템플릿이 성공적으로 삭제됨.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: '삭제할 템플릿을 찾을 수 없습니다.',
+  }) // 서비스에서 NotFoundException 발생 시
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: '인증되지 않았습니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: '권한이 없습니다 (Admin 역할 필요).',
+  })
+  async removeTemplate(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<void> {
+    const adminUserId = req.user.id;
+    await this.workflowService.removeTemplate(id, adminUserId);
+    // 성공 시 본문 없이 204 상태 코드만 반환 (HttpCode 데코레이터에 의해)
   }
 
   // ... removeTemplate 메소드는 이전 답변 참고 ...
