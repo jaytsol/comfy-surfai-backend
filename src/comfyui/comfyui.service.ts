@@ -212,10 +212,6 @@ export class ComfyUIService implements OnModuleInit {
         );
       }
 
-      console.log(
-        '[ComfyUIService] Applying dynamic parameters to workflow template:',
-        generateDTO.parameters,
-      );
       for (const paramKey in generateDTO.parameters) {
         if (
           Object.prototype.hasOwnProperty.call(generateDTO.parameters, paramKey)
@@ -231,10 +227,6 @@ export class ComfyUIService implements OnModuleInit {
               typeof modifiedDefinition[node_id] === 'object' &&
               modifiedDefinition[node_id].inputs
             ) {
-              console.log(
-                `  - Mapping parameter "${paramKey}" to Node ID "${node_id}", Input "${input_name}" with value:`,
-                paramValue,
-              );
               modifiedDefinition[node_id].inputs[input_name] = paramValue;
             } else {
               console.warn(
