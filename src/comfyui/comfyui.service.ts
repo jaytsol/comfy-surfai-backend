@@ -39,6 +39,7 @@ export class ComfyUIService implements OnModuleInit {
   private comfyuiWsUrl: string;
   private authHeader: string;
   private ws: WebSocket;
+  private client_id: string;
 
   public readonly wsMessage$: EventEmitter<ComfyUIMessageEvents> = // 타입 명시 수정
     new EventEmitter();
@@ -50,9 +51,13 @@ export class ComfyUIService implements OnModuleInit {
     const comfyuiHost = this.configService.get<string>('COMFYUI_HOST');
     const username = this.configService.get<string>('NGINX_USERNAME');
     const password = this.configService.get<string>('NGINX_PASSWORD');
+    this.client_id = uuidv4();
 
     this.comfyuiUrl = `https://${comfyuiHost}`;
-    this.comfyuiWsUrl = `wss://${comfyuiHost}/ws`;
+    const wsProtocol = this.comfyuiUrl.startsWith('https') ? 'wss' : 'ws';
+    const serverAddress = comfyuiHost;
+    this.comfyuiWsUrl = `${wsProtocol}://${serverAddress}/ws?clientId=${this.client_id}`;
+
     this.authHeader =
       'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
   }
@@ -94,6 +99,7 @@ export class ComfyUIService implements OnModuleInit {
           return;
         }
         const message = JSON.parse(rawMessage) as ComfyUIWebSocketMessage;
+
         this.wsMessage$.emit('message', message);
       } catch (e) {
         console.error('Failed to parse message from ComfyUI WebSocket:', e);
@@ -111,7 +117,7 @@ export class ComfyUIService implements OnModuleInit {
 
   private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
     return {
-      client_id: uuidv4(),
+      client_id: this.client_id,
       prompt: workflow,
     };
   }
