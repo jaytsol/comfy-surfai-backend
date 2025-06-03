@@ -99,7 +99,7 @@ export class WorkflowController {
     status: HttpStatus.FORBIDDEN,
     description: '권한 없음 (Admin 역할 필요)',
   })
-  async findAllTemplates() // @Query() query: ListWorkflowTemplatesQueryDto, // 향후 페이지네이션/필터링 사용 시
+  async findAllTemplates() // @Query() query: ListWorkflowTemplatesQueryDTO, // 향후 페이지네이션/필터링 사용 시
   : Promise<WorkflowTemplateResponseDTO[]> {
     const workflowEntities =
       await this.workflowService.findAllTemplates(/* query */);
