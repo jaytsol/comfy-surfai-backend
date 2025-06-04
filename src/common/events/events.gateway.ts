@@ -29,9 +29,18 @@ export class EventsGateway implements OnModuleInit {
           'Received ComfyUI WebSocket message in EventsGateway:',
           message,
         );
+
+        // client_id가 없는 경우 추가
+        const messageWithClientId: ComfyUIWebSocketMessage & {
+          client_id: string;
+        } = {
+          ...message,
+          client_id: this.comfyuiService.client_id,
+        };
+
         this.server.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(message));
+            client.send(JSON.stringify(messageWithClientId));
           }
         });
       },
