@@ -39,7 +39,7 @@ export class ComfyUIService implements OnModuleInit {
   private comfyuiWsUrl: string;
   private authHeader: string;
   private ws: WebSocket;
-  public client_id: string;
+  private client_id: string;
 
   public readonly wsMessage$: EventEmitter<ComfyUIMessageEvents> = // 타입 명시 수정
     new EventEmitter();
