@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
 import { WorkflowModule } from './workflow/workflow.module';
 import { Workflow } from './common/entities/workflow.entity';
+import { EventsGateway } from './common/events/events.gateway';
 
 const configService = new ConfigService();
 
@@ -36,6 +37,6 @@ const configService = new ConfigService();
     WorkflowModule,
   ],
   controllers: [AppController, ComfyUIController],
-  providers: [AppService, ComfyUIService],
+  providers: [AppService, ComfyUIService, EventsGateway],
 })
 export class AppModule {}

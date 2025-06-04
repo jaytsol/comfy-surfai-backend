@@ -6,7 +6,7 @@ import {
 } from '@nestjs/websockets';
 
 import { OnModuleInit } from '@nestjs/common';
-import { Server, WebSocket } from 'ws';
+import { Server } from 'socket.io';
 
 import { ComfyUIService } from 'src/comfyui/comfyui.service';
 import { ComfyUIWebSocketMessage } from 'src/common/interfaces/comfyui-workflow.interface';
@@ -29,11 +29,7 @@ export class EventsGateway implements OnModuleInit {
           'Received ComfyUI WebSocket message in EventsGateway:',
           message,
         );
-        this.server.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(message));
-          }
-        });
+        this.server.emit('message', message);
       },
     );
   }
