@@ -8,6 +8,7 @@ import passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -50,6 +51,8 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   // Swagger
   const swaggerConfig = new DocumentBuilder()
