@@ -34,12 +34,6 @@ export class EventsGateway
     this.comfyuiService.wsMessage$.on(
       'message',
       (message: ComfyUIWebSocketMessage) => {
-        console.log(
-          'Received ComfyUI message in EventsGateway, broadcasting via Native WebSocket:',
-          // message, // 전체 메시지 로깅은 너무 길 수 있으므로 타입이나 주요 정보만 로깅하는 것이 좋을 수 있습니다.
-          `Type: ${message.type}, Prompt ID: ${message.data.prompt_id || 'N/A'}`,
-        );
-
         // 모든 연결된 네이티브 WebSocket 클라이언트에게 메시지 브로드캐스트
         this.server.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
@@ -75,6 +69,7 @@ export class EventsGateway
     // (client as any).clientId = clientId;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleDisconnect(client: WebSocket) {
     // const clientId = (client as any).clientId || 'N/A';
     console.log(`Native WebSocket Client disconnected.`);
