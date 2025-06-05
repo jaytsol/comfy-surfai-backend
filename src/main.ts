@@ -15,10 +15,10 @@ import * as path from 'path'; // 경로 모듈 임포트
 async function bootstrap() {
   const httpsOptions = {
     key: fs.readFileSync(
-      path.join(__dirname, '..', 'certs', 'localhost+2-key.pem'),
+      path.join(__dirname, '../..', 'certs', 'localhost+2-key.pem'),
     ),
     cert: fs.readFileSync(
-      path.join(__dirname, '..', 'certs', 'localhost+2.pem'),
+      path.join(__dirname, '../..', 'certs', 'localhost+2.pem'),
     ),
   };
 
