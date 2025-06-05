@@ -69,6 +69,7 @@ export class ComfyUIController {
         success: true,
         message: 'ComfyUI 작업 요청 처리 중입니다.', // 서비스에서 구체적인 메시지 반환 가능
         data: result,
+        client_id: this.comfyuiService.client_id,
       };
     } catch (error) {
       // 서비스에서 던져진 NotFoundException, InternalServerErrorException 등 다양한 예외 처리

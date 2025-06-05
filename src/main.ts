@@ -8,9 +8,25 @@ import passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { WsAdapter } from '@nestjs/platform-ws';
+import * as fs from 'fs'; // 파일 시스템 모듈 임포트
+import * as path from 'path'; // 경로 모듈 임포트
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions = {
+    key: fs.readFileSync(
+      path.join(__dirname, '../..', 'certs', 'localhost+2-key.pem'),
+    ),
+    cert: fs.readFileSync(
+      path.join(__dirname, '../..', 'certs', 'localhost+2.pem'),
+    ),
+  };
+
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions,
+  });
+
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   const configService = app.get(ConfigService);
 
@@ -24,7 +40,7 @@ async function bootstrap() {
 
   // CORS 설정 추가
   app.enableCors({
-    origin: 'http://localhost:4000',
+    origin: 'https://localhost:4000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -44,9 +60,10 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
+        secure: true,
         maxAge: 1000 * 60 * 60 * 24, // 1 day
         httpOnly: true,
-        // secure: configService.get<string>('NODE_ENV === 'production', // HTTPS 환경에서만
+        sameSite: 'lax',
       },
     }),
   );
@@ -76,5 +93,8 @@ async function bootstrap() {
 
   await app.listen(configService.get<number>('PORT') ?? 3000);
   console.log(`Application is running on: ${await app.getUrl()}`);
+  console.log(
+    `WebSocket (WSS) is running on: wss://localhost:${configService.get<number>('PORT') ?? 3000}`,
+  );
 }
 bootstrap();
