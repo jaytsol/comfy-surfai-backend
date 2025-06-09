@@ -19,6 +19,7 @@ import { EventEmitter } from 'events';
 import { WorkflowService } from 'src/workflow/workflow.service';
 import { GenerateImageDTO } from 'src/common/dto/generate-image.dto'; // 경로 확인
 import * as path from 'path';
+import { IStorageService } from 'src/storage/interfaces/storage.interface';
 
 // ComfyUIRequest 인터페이스 및 기타 로컬 인터페이스 정의
 export interface ComfyUIRequest {
@@ -53,15 +54,13 @@ export class ComfyUIService implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly workflowService: WorkflowService,
-    @Inject('IStorageService') private readonly storageService: any, // Use any type since we know the interface
+    @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {
     const comfyuiHost = this.configService.get<string>('COMFYUI_HOST');
     const username = this.configService.get<string>('NGINX_USERNAME');
     const password = this.configService.get<string>('NGINX_PASSWORD');
 
     // 이 client_id는 WebSocket 연결 자체를 식별하는 데 사용됩니다.
-    this.client_id = uuidv4();
-
     this.comfyuiUrl = `https://${comfyuiHost}`;
     const wsProtocol = this.comfyuiUrl.startsWith('https') ? 'wss' : 'ws';
     this.comfyuiWsUrl = `${wsProtocol}://${comfyuiHost}/ws?clientId=${this.client_id}`;
@@ -99,14 +98,22 @@ export class ComfyUIService implements OnModuleInit {
     // WebSocket 메시지 핸들러는 서비스 초기화 시 한 번만 등록합니다.
     this.ws.onmessage = (event) => {
       try {
-        const message = JSON.parse(
-          event.data as string,
-        ) as ComfyUIWebSocketMessage;
+        // rawMessage를 얻는 로직 (이전 코드에서 가져옴)
+        let rawMessage: string;
+        if (typeof event.data === 'string') rawMessage = event.data;
+        else if (Buffer.isBuffer(event.data))
+          rawMessage = event.data.toString('utf8');
+        else if (event.data instanceof ArrayBuffer)
+          rawMessage = Buffer.from(event.data).toString('utf8');
+        else {
+          console.warn('Unexpected WebSocket data type:', typeof event.data);
+          return;
+        }
 
-        // 프론트엔드로 모든 메시지를 전달하는 로직
-        this.wsMessage$.emit('message', message);
+        const message = JSON.parse(rawMessage) as ComfyUIWebSocketMessage; // ✨ 여기서 한 번만 파싱
 
-        // 'executed' 메시지를 받으면, prompt_id를 사용해 메타데이터를 찾아 업로드 핸들러 호출
+        this.wsMessage$.emit('message', message); // 파싱된 객체 전달
+
         if (message.type === 'executed' && message.data?.prompt_id) {
           const metadata = this.promptMetadata.get(message.data.prompt_id);
           if (metadata) {
@@ -144,7 +151,7 @@ export class ComfyUIService implements OnModuleInit {
 
   private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
     return {
-      client_id: this.client_id, // ✨ 각 프롬프트 요청마다 고유 ID 생성
+      client_id: uuidv4(), // ✨ 각 프롬프트 요청마다 고유 ID 생성
       prompt: workflow,
     };
   }
@@ -288,12 +295,14 @@ export class ComfyUIService implements OnModuleInit {
           HttpStatus.BAD_REQUEST,
         );
       }
-      for (const paramKey in generateDTO.parameters) {
+      for (const [paramKey, paramValue] of Object.entries(
+        generateDTO.parameters,
+      )) {
         const mappingInfo = parameterMap[paramKey];
         if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
           modifiedDefinition[mappingInfo.node_id].inputs[
             mappingInfo.input_name
-          ] = generateDTO.parameters[paramKey];
+          ] = paramValue;
         }
       }
     }
