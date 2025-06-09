@@ -3,6 +3,13 @@ export interface ComfyUIResponse {
   prompt_id: string;
   number: number;
   node_errors: Record<string, any>;
+  output: {
+    images: {
+      filename: string;
+      subfolder: string;
+      type: string;
+    }[];
+  };
 }
 
 export interface ComfyUIResult {
