@@ -2,9 +2,11 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { storageConfig } from './constants/storage.constants';
 import { CloudflareR2Service } from './services/cloudflare-r2.service';
+import { StorageController } from './storage.controller';
 
 @Module({
   imports: [ConfigModule.forFeature(storageConfig)],
+  controllers: [StorageController],
   providers: [
     {
       provide: 'IStorageService',
