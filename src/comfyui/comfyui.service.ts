@@ -287,7 +287,7 @@ export class ComfyUIService implements OnModuleInit {
     if (generateDTO.parameters && parameterMap) {
       // 파라미터 유효성 검사 및 적용 로직
       const unknownParams = Object.keys(generateDTO.parameters).filter(
-        (p) => !Object.prototype.hasOwnProperty.call(parameterMap, p),
+        (p) => !Object.hasOwn(parameterMap, p),
       );
       if (unknownParams.length > 0) {
         throw new HttpException(
