@@ -103,6 +103,7 @@ export class EventsGateway
   /**
    * 클라이언트 연결이 끊어졌을 때 실행됩니다.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleDisconnect(client: WebSocket) {
     // const clientId = ...; // Map에서 해당 클라이언트를 찾아 ID를 얻고 Map에서 제거하는 로직
     console.log('[EventsGateway] A client disconnected.');

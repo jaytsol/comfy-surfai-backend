@@ -177,6 +177,7 @@ export class ComfyUIService implements OnModuleInit {
   private async handleExecutionResult(
     message: ComfyUIWebSocketMessage,
     userId: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     templateId: number,
   ) {
     const messageData = message.data;
