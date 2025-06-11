@@ -13,6 +13,8 @@ import { WorkflowModule } from './workflow/workflow.module';
 import { Workflow } from './common/entities/workflow.entity';
 import { EventsGateway } from './common/events/events.gateway';
 import { StorageModule } from './storage/storage.module';
+import { GeneratedOutputModule } from './generated-output/generated-output.module';
+import { GeneratedOutput } from './common/entities/generated-output.entity';
 
 const configService = new ConfigService();
 
@@ -29,12 +31,13 @@ const configService = new ConfigService();
       username: configService.get<string>('DB_USERNAME'),
       password: configService.get<string>('DB_PASSWORD'),
       database: configService.get<string>('DB_DATABASE'),
-      entities: [User, Workflow],
+      entities: [User, Workflow, GeneratedOutput],
       synchronize: true,
       logging: true,
     }),
     AuthModule,
     ComfyUIModule,
+    GeneratedOutputModule,
     WorkflowModule,
     StorageModule,
   ],

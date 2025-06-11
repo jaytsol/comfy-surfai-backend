@@ -7,10 +7,10 @@ import connectPgSimple from 'connect-pg-simple';
 import passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { WsAdapter } from '@nestjs/platform-ws';
 import * as fs from 'fs'; // 파일 시스템 모듈 임포트
 import * as path from 'path'; // 경로 모듈 임포트
+import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 
 async function bootstrap() {
   const httpsOptions = {

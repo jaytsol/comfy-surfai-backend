@@ -1,14 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty } from 'class-validator';
-// WorkflowParameterMappingItem 인터페이스는 workflow.entity.ts에 정의되어 있다고 가정합니다.
-// 만약 별도로 정의했다면 해당 경로에서 import 합니다.
-// import { WorkflowParameterMappingItem } from 'src/common/entities/workflow.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 
-// 인터페이스를 직접 implements 하기보다는, DTO는 DTO 자체의 역할에 집중하도록 합니다.
-// 필요한 속성을 동일하게 정의합니다.
 export class WorkflowParameterMappingItemDTO {
   @ApiProperty({
-    description: '매핑될 ComfyUI 워크플로우 내 노드의 ID (문자열 형태의 숫자)',
+    description: '매핑될 ComfyUI 워크플로우 내 노드의 ID',
     example: '6',
   })
   @IsString()
@@ -22,4 +17,14 @@ export class WorkflowParameterMappingItemDTO {
   @IsString()
   @IsNotEmpty()
   input_name: string;
+
+  @ApiPropertyOptional({
+    description: '프론트엔드 UI에 표시될 파라미터에 대한 설명 (툴팁용)',
+    example: '생성할 이미지의 주된 내용을 상세히 기술하세요.',
+    maxLength: 500,
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  description?: string;
 }

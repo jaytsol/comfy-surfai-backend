@@ -15,6 +15,7 @@ import { User } from './user.entity';
 export interface WorkflowParameterMappingItem {
   node_id: string; // 대상 노드의 ID (ComfyUI JSON 내의 키)
   input_name: string; // 대상 노드 내의 입력 필드 이름
+  description?: string;
   // value_type?: 'string' | 'number' | 'boolean'; // 필요시 값 타입 (선택)
 }
 

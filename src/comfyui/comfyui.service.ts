@@ -12,26 +12,27 @@ import {
   ComfyUIInput,
   ComfyUIResponse,
   ComfyUIWebSocketMessage,
+  GenerationResult,
 } from 'src/common/interfaces/comfyui-workflow.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'ws';
 import { EventEmitter } from 'events';
 import { WorkflowService } from 'src/workflow/workflow.service';
-import { GenerateImageDTO } from 'src/common/dto/generate-image.dto'; // 경로 확인
-import * as path from 'path';
+import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
-
-// ComfyUIRequest 인터페이스 및 기타 로컬 인터페이스 정의
+import { getMimeType } from 'src/common/utils/mime-type.util';
+import { GeneratedOutputService } from 'src/generated-output/generated-output.service';
+import { CreateGeneratedOutputDTO } from 'src/common/dto/generated-output/create-generated-output.dto';
+// --- 로컬 인터페이스 정의 ---
 export interface ComfyUIRequest {
   client_id: string;
   prompt: ComfyUIInput;
 }
-interface ComfyUIMessageEvents {
-  message: [ComfyUIWebSocketMessage];
-}
+
 interface ComfyUIErrorResponseData {
   message?: string;
 }
+// --- 인터페이스 정의 끝 ---
 
 @Injectable()
 export class ComfyUIService implements OnModuleInit {
@@ -39,32 +40,35 @@ export class ComfyUIService implements OnModuleInit {
   private comfyuiWsUrl: string;
   private authHeader: string;
   private ws: WebSocket;
-  public client_id: string; // WebSocket 연결 식별용
+  public readonly client_id: string; // WebSocket 연결 식별용, Comfyui.controller.ts에서 Response에 포함
 
-  // ✨ --- 동시성 문제 해결을 위한 변경점 1 --- ✨
-  // prompt_id를 키로 사용하여, 해당 작업을 요청한 사용자의 ID와 사용된 템플릿 ID를 저장합니다.
-  private promptMetadata = new Map<
+  // ✨ prompt_id를 키로, 생성 요청의 전체 컨텍스트를 저장합니다.
+  private readonly promptMetadata = new Map<
     string,
-    { userId: number; templateId: number }
+    {
+      userId: number;
+      templateId: number;
+      parameters?: Record<string, any>; // 사용된 파라미터도 함께 저장
+    }
   >();
 
-  public readonly wsMessage$: EventEmitter<ComfyUIMessageEvents> =
-    new EventEmitter();
+  // EventsGateway가 구독할 EventEmitter
+  public readonly wsMessage$: EventEmitter = new EventEmitter();
 
   constructor(
     private readonly configService: ConfigService,
     private readonly workflowService: WorkflowService,
+    private readonly generatedOutputService: GeneratedOutputService,
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {
     const comfyuiHost = this.configService.get<string>('COMFYUI_HOST');
     const username = this.configService.get<string>('NGINX_USERNAME');
     const password = this.configService.get<string>('NGINX_PASSWORD');
 
-    // 이 client_id는 WebSocket 연결 자체를 식별하는 데 사용됩니다.
+    this.client_id = uuidv4();
     this.comfyuiUrl = `https://${comfyuiHost}`;
     const wsProtocol = this.comfyuiUrl.startsWith('https') ? 'wss' : 'ws';
     this.comfyuiWsUrl = `${wsProtocol}://${comfyuiHost}/ws?clientId=${this.client_id}`;
-
     this.authHeader =
       'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
   }
@@ -94,11 +98,9 @@ export class ComfyUIService implements OnModuleInit {
         `Successfully connected to ComfyUI WebSocket (clientId: ${this.client_id})`,
       );
 
-    // ✨ --- 동시성 문제 해결을 위한 변경점 2 --- ✨
-    // WebSocket 메시지 핸들러는 서비스 초기화 시 한 번만 등록합니다.
+    // WebSocket 메시지 핸들러 (서비스 초기화 시 한 번만 등록)
     this.ws.onmessage = (event) => {
       try {
-        // rawMessage를 얻는 로직 (이전 코드에서 가져옴)
         let rawMessage: string;
         if (typeof event.data === 'string') rawMessage = event.data;
         else if (Buffer.isBuffer(event.data))
@@ -110,10 +112,12 @@ export class ComfyUIService implements OnModuleInit {
           return;
         }
 
-        const message = JSON.parse(rawMessage) as ComfyUIWebSocketMessage; // ✨ 여기서 한 번만 파싱
+        const message = JSON.parse(rawMessage) as ComfyUIWebSocketMessage;
 
-        this.wsMessage$.emit('message', message); // 파싱된 객체 전달
+        // 1. 모든 메시지를 EventsGateway로 전달하여 프론트엔드로 브로드캐스트
+        this.wsMessage$.emit('message', message);
 
+        // 2. 'executed' 메시지인 경우, R2 업로드 등 후처리 작업 수행
         if (message.type === 'executed' && message.data?.prompt_id) {
           const metadata = this.promptMetadata.get(message.data.prompt_id);
           if (metadata) {
@@ -124,13 +128,14 @@ export class ComfyUIService implements OnModuleInit {
               message,
               metadata.userId,
               metadata.templateId,
+              metadata.parameters,
             ).catch((e) =>
               console.error(
                 `[ComfyUIService] Error in handleExecutionResult for prompt #${message.data.prompt_id}:`,
                 e,
               ),
             );
-            // 처리가 시작되면 Map에서 해당 항목 삭제 (재처리 방지)
+            // 후처리 시작 후 Map에서 해당 항목 삭제 (재처리 방지)
             this.promptMetadata.delete(message.data.prompt_id);
           }
         }
@@ -149,48 +154,23 @@ export class ComfyUIService implements OnModuleInit {
     };
   }
 
-  private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
-    return {
-      client_id: uuidv4(), // ✨ 각 프롬프트 요청마다 고유 ID 생성
-      prompt: workflow,
-    };
-  }
-
-  private getMimeType(filename: string): string {
-    const extension = path.extname(filename).toLowerCase();
-    switch (extension) {
-      case '.png':
-        return 'image/png';
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      case '.gif':
-        return 'image/gif';
-      case '.webp':
-        return 'image/webp';
-      case '.mp4':
-        return 'video/mp4';
-      default:
-        return 'application/octet-stream';
-    }
-  }
-
   private async handleExecutionResult(
     message: ComfyUIWebSocketMessage,
     userId: number,
+
     templateId: number,
+    usedParameters?: Record<string, any>,
   ) {
     const messageData = message.data;
     if (!messageData.output?.images) return;
 
     const { prompt_id, output } = messageData;
     const finalImages = output.images.filter((img) => img.type === 'output');
-
     console.log(
       `[ComfyUIService] Handling execution result for prompt #${prompt_id}. Found ${finalImages.length} final images.`,
     );
 
-    for (const imageInfo of finalImages) {
+    const uploadPromises = finalImages.map(async (imageInfo) => {
       try {
         const params = new URLSearchParams({
           filename: imageInfo.filename,
@@ -210,7 +190,7 @@ export class ComfyUIService implements OnModuleInit {
         const fileBuffer = Buffer.from(response.data);
 
         const r2FileName = `outputs/${userId}/${prompt_id}/${imageInfo.filename}`;
-        const contentType = this.getMimeType(imageInfo.filename);
+        const contentType = getMimeType(imageInfo.filename);
         const uploadedFileUrl = await this.storageService.uploadFile(
           r2FileName,
           fileBuffer,
@@ -221,14 +201,121 @@ export class ComfyUIService implements OnModuleInit {
           `[ComfyUIService] Successfully uploaded to R2: ${uploadedFileUrl}`,
         );
 
-        // TODO: DB에 생성 결과 저장하는 로직 구현
-        // await this.generatedOutputService.create({ userId, promptId: prompt_id, workflowId: templateId, r2Url: uploadedFileUrl });
+        // ✨ --- DB에 생성 결과 저장하는 로직 구현 --- ✨
+        const createOutputDTO: CreateGeneratedOutputDTO = {
+          r2Url: uploadedFileUrl,
+          originalFilename: imageInfo.filename,
+          mimeType: contentType,
+          promptId: prompt_id,
+          ownerUserId: userId,
+          sourceWorkflowId: templateId,
+          usedParameters: usedParameters, // 사용된 파라미터 함께 저장
+        };
+        await this.generatedOutputService.create(createOutputDTO);
+        console.log(
+          `[ComfyUIService] Saved generation metadata to DB for file: ${imageInfo.filename}`,
+        );
+
+        return uploadedFileUrl;
       } catch (error) {
         console.error(
           `[ComfyUIService] Failed to process and upload image ${imageInfo.filename} for prompt #${prompt_id}:`,
           error.message,
         );
+        return null; // 실패 시 null 반환
       }
+    });
+
+    const uploadedUrls = (await Promise.all(uploadPromises)).filter(
+      (url): url is string => url !== null,
+    );
+
+    if (uploadedUrls.length > 0) {
+      const resultPayload: GenerationResult = {
+        prompt_id: prompt_id,
+        image_urls: uploadedUrls,
+      };
+
+      // EventsGateway가 수신할 'generation_result' 이벤트 발생
+      this.wsMessage$.emit('generation_result', {
+        type: 'generation_result',
+        data: resultPayload,
+      });
+      console.log(
+        `[ComfyUIService] Emitting 'generation_result' for prompt #${prompt_id}`,
+      );
+    }
+  }
+
+  private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
+    // WebSocket 연결과 동일한 client_id를 사용하여 HTTP 요청과 WebSocket 세션을 연결
+    return {
+      client_id: this.client_id,
+      prompt: workflow,
+    };
+  }
+
+  async generateImageFromTemplate(
+    generateDTO: GenerateImageDTO,
+    adminUserId: number,
+  ): Promise<ComfyUIResponse> {
+    console.log(
+      `[ComfyUIService] Admin #${adminUserId} requested image generation using templateId: ${generateDTO.templateId}`,
+    );
+
+    const template = await this.workflowService.findOneTemplateById(
+      generateDTO.templateId,
+    );
+    const baseDefinition = template.definition as ComfyUIInput;
+    const parameterMap = template.parameter_map;
+    const modifiedDefinition: ComfyUIInput = JSON.parse(
+      JSON.stringify(baseDefinition),
+    );
+
+    if (generateDTO.parameters && parameterMap) {
+      const unknownParams = Object.keys(generateDTO.parameters).filter(
+        (p) => !Object.hasOwn(parameterMap, p),
+      );
+      if (unknownParams.length > 0) {
+        throw new HttpException(
+          `Unknown parameters: ${unknownParams.join(', ')}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      for (const [paramKey, paramValue] of Object.entries(
+        generateDTO.parameters,
+      )) {
+        const mappingInfo = parameterMap[paramKey];
+        if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
+          modifiedDefinition[mappingInfo.node_id].inputs[
+            mappingInfo.input_name
+          ] = paramValue;
+        }
+      }
+    }
+
+    try {
+      const result = await this.sendPromptToComfyUI(modifiedDefinition);
+
+      if (result && result.prompt_id) {
+        // ✨ prompt_id와 요청 메타데이터를 Map에 저장하여 나중에 WebSocket 메시지 처리 시 사용
+        this.promptMetadata.set(result.prompt_id, {
+          userId: adminUserId,
+          templateId: generateDTO.templateId,
+          parameters: generateDTO.parameters,
+        });
+        console.log(
+          `[ComfyUIService] Prompt #${result.prompt_id} metadata stored for user #${adminUserId}. Awaiting 'executed' message.`,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.error(
+        `[ComfyUIService] Error during ComfyUI interaction for templateId ${generateDTO.templateId}:`,
+        error.message,
+      );
+      throw error;
     }
   }
 
@@ -264,71 +351,6 @@ export class ComfyUIService implements OnModuleInit {
           'Internal Server Error during ComfyUI API call',
         );
       }
-    }
-  }
-
-  async generateImageFromTemplate(
-    generateDTO: GenerateImageDTO,
-    adminUserId: number,
-  ): Promise<ComfyUIResponse> {
-    console.log(
-      `[ComfyUIService] Admin #${adminUserId} requested image generation using templateId: ${generateDTO.templateId}`,
-    );
-
-    const template = await this.workflowService.findOneTemplateById(
-      generateDTO.templateId,
-    );
-    const baseDefinition = template.definition as ComfyUIInput;
-    const parameterMap = template.parameter_map;
-    const modifiedDefinition: ComfyUIInput = JSON.parse(
-      JSON.stringify(baseDefinition),
-    );
-
-    if (generateDTO.parameters && parameterMap) {
-      // 파라미터 유효성 검사 및 적용 로직
-      const unknownParams = Object.keys(generateDTO.parameters).filter(
-        (p) => !Object.hasOwn(parameterMap, p),
-      );
-      if (unknownParams.length > 0) {
-        throw new HttpException(
-          `Unknown parameters: ${unknownParams.join(', ')}`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      for (const [paramKey, paramValue] of Object.entries(
-        generateDTO.parameters,
-      )) {
-        const mappingInfo = parameterMap[paramKey];
-        if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
-          modifiedDefinition[mappingInfo.node_id].inputs[
-            mappingInfo.input_name
-          ] = paramValue;
-        }
-      }
-    }
-
-    // ✨ --- 동시성 문제 해결을 위한 변경점 3 --- ✨
-    // WebSocket 리스너를 재등록하는 대신, prompt_id와 메타데이터를 Map에 저장
-    try {
-      const result = await this.sendPromptToComfyUI(modifiedDefinition);
-
-      if (result && result.prompt_id) {
-        this.promptMetadata.set(result.prompt_id, {
-          userId: adminUserId,
-          templateId: generateDTO.templateId,
-        });
-        console.log(
-          `[ComfyUIService] Prompt #${result.prompt_id} metadata stored for user #${adminUserId}. Awaiting 'executed' message.`,
-        );
-      }
-
-      return result;
-    } catch (error) {
-      console.error(
-        `[ComfyUIService] Error during ComfyUI interaction for templateId ${generateDTO.templateId}:`,
-        error.message,
-      );
-      throw error;
     }
   }
 }
