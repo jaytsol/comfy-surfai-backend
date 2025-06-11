@@ -60,6 +60,8 @@ export class ComfyUIService implements OnModuleInit {
     const username = this.configService.get<string>('NGINX_USERNAME');
     const password = this.configService.get<string>('NGINX_PASSWORD');
 
+    this.client_id = uuidv4();
+
     // 이 client_id는 WebSocket 연결 자체를 식별하는 데 사용됩니다.
     this.comfyuiUrl = `https://${comfyuiHost}`;
     const wsProtocol = this.comfyuiUrl.startsWith('https') ? 'wss' : 'ws';
@@ -151,7 +153,7 @@ export class ComfyUIService implements OnModuleInit {
 
   private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
     return {
-      client_id: uuidv4(), // ✨ 각 프롬프트 요청마다 고유 ID 생성
+      client_id: this.client_id, // ✨ 각 프롬프트 요청마다 고유 ID 생성
       prompt: workflow,
     };
   }
