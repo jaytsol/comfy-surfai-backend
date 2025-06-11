@@ -21,7 +21,8 @@ import { WorkflowService } from 'src/workflow/workflow.service';
 import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import { getMimeType } from 'src/common/utils/mime-type.util';
-
+import { GeneratedOutputService } from 'src/generated-output/generated-output.service';
+import { CreateGeneratedOutputDto } from 'src/common/dto/generated-output/create-generated-output.dto';
 // --- 로컬 인터페이스 정의 ---
 export interface ComfyUIRequest {
   client_id: string;
@@ -41,10 +42,14 @@ export class ComfyUIService implements OnModuleInit {
   private ws: WebSocket;
   public readonly client_id: string; // WebSocket 연결 식별용, Comfyui.controller.ts에서 Response에 포함
 
-  // prompt_id를 키로, 해당 작업을 요청한 사용자와 템플릿 정보를 값으로 저장하는 Map
+  // ✨ prompt_id를 키로, 생성 요청의 전체 컨텍스트를 저장합니다.
   private readonly promptMetadata = new Map<
     string,
-    { userId: number; templateId: number }
+    {
+      userId: number;
+      templateId: number;
+      parameters?: Record<string, any>; // 사용된 파라미터도 함께 저장
+    }
   >();
 
   // EventsGateway가 구독할 EventEmitter
@@ -53,6 +58,7 @@ export class ComfyUIService implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly workflowService: WorkflowService,
+    private readonly generatedOutputService: GeneratedOutputService,
     @Inject('IStorageService') private readonly storageService: IStorageService,
   ) {
     const comfyuiHost = this.configService.get<string>('COMFYUI_HOST');
@@ -122,6 +128,7 @@ export class ComfyUIService implements OnModuleInit {
               message,
               metadata.userId,
               metadata.templateId,
+              metadata.parameters,
             ).catch((e) =>
               console.error(
                 `[ComfyUIService] Error in handleExecutionResult for prompt #${message.data.prompt_id}:`,
@@ -147,19 +154,12 @@ export class ComfyUIService implements OnModuleInit {
     };
   }
 
-  private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
-    // WebSocket 연결과 동일한 client_id를 사용하여 HTTP 요청과 WebSocket 세션을 연결
-    return {
-      client_id: this.client_id,
-      prompt: workflow,
-    };
-  }
-
   private async handleExecutionResult(
     message: ComfyUIWebSocketMessage,
     userId: number,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     templateId: number,
+    usedParameters?: Record<string, any>,
   ) {
     const messageData = message.data;
     if (!messageData.output?.images) return;
@@ -200,6 +200,22 @@ export class ComfyUIService implements OnModuleInit {
         console.log(
           `[ComfyUIService] Successfully uploaded to R2: ${uploadedFileUrl}`,
         );
+
+        // ✨ --- DB에 생성 결과 저장하는 로직 구현 --- ✨
+        const createOutputDto: CreateGeneratedOutputDto = {
+          r2Url: uploadedFileUrl,
+          originalFilename: imageInfo.filename,
+          mimeType: contentType,
+          promptId: prompt_id,
+          ownerUserId: userId,
+          sourceWorkflowId: templateId,
+          usedParameters: usedParameters, // 사용된 파라미터 함께 저장
+        };
+        await this.generatedOutputService.create(createOutputDto);
+        console.log(
+          `[ComfyUIService] Saved generation metadata to DB for file: ${imageInfo.filename}`,
+        );
+
         return uploadedFileUrl;
       } catch (error) {
         console.error(
@@ -218,7 +234,6 @@ export class ComfyUIService implements OnModuleInit {
       const resultPayload: GenerationResult = {
         prompt_id: prompt_id,
         image_urls: uploadedUrls,
-        // client_id는 프론트엔드에서 현재 필요하지 않으므로 생략
       };
 
       // EventsGateway가 수신할 'generation_result' 이벤트 발생
@@ -230,44 +245,14 @@ export class ComfyUIService implements OnModuleInit {
         `[ComfyUIService] Emitting 'generation_result' for prompt #${prompt_id}`,
       );
     }
-
-    // TODO: DB에 생성 결과 저장하는 로직 구현 (GeneratedOutputService 사용)
-    // await this.generatedOutputService.create({ userId, promptId: prompt_id, workflowId: templateId, r2Urls: uploadedUrls });
   }
 
-  async sendPromptToComfyUI(workflow: ComfyUIInput): Promise<ComfyUIResponse> {
-    try {
-      const requestPayload = this.createComfyUIRequest(workflow);
-      const response = await axios.post(
-        `${this.comfyuiUrl}/prompt`,
-        requestPayload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: this.authHeader,
-          },
-        },
-      );
-      return response.data as ComfyUIResponse;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const status =
-          error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR;
-        const errorData = error.response?.data as ComfyUIErrorResponseData;
-        const message =
-          typeof errorData === 'object' && errorData?.message
-            ? errorData.message
-            : 'ComfyUI API 호출 실패';
-        throw new HttpException(
-          { status, error: message, details: errorData },
-          status,
-        );
-      } else {
-        throw new InternalServerErrorException(
-          'Internal Server Error during ComfyUI API call',
-        );
-      }
-    }
+  private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
+    // WebSocket 연결과 동일한 client_id를 사용하여 HTTP 요청과 WebSocket 세션을 연결
+    return {
+      client_id: this.client_id,
+      prompt: workflow,
+    };
   }
 
   async generateImageFromTemplate(
@@ -317,6 +302,7 @@ export class ComfyUIService implements OnModuleInit {
         this.promptMetadata.set(result.prompt_id, {
           userId: adminUserId,
           templateId: generateDTO.templateId,
+          parameters: generateDTO.parameters,
         });
         console.log(
           `[ComfyUIService] Prompt #${result.prompt_id} metadata stored for user #${adminUserId}. Awaiting 'executed' message.`,
@@ -330,6 +316,41 @@ export class ComfyUIService implements OnModuleInit {
         error.message,
       );
       throw error;
+    }
+  }
+
+  async sendPromptToComfyUI(workflow: ComfyUIInput): Promise<ComfyUIResponse> {
+    try {
+      const requestPayload = this.createComfyUIRequest(workflow);
+      const response = await axios.post(
+        `${this.comfyuiUrl}/prompt`,
+        requestPayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: this.authHeader,
+          },
+        },
+      );
+      return response.data as ComfyUIResponse;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status =
+          error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR;
+        const errorData = error.response?.data as ComfyUIErrorResponseData;
+        const message =
+          typeof errorData === 'object' && errorData?.message
+            ? errorData.message
+            : 'ComfyUI API 호출 실패';
+        throw new HttpException(
+          { status, error: message, details: errorData },
+          status,
+        );
+      } else {
+        throw new InternalServerErrorException(
+          'Internal Server Error during ComfyUI API call',
+        );
+      }
     }
   }
 }
