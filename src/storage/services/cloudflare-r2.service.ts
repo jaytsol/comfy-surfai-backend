@@ -21,9 +21,6 @@ export class CloudflareR2Service implements IStorageService {
     const accountId = process.env.R2_ACCOUNT_ID || '';
     this.bucketName = process.env.R2_BUCKET_NAME || '';
 
-    console.log('accountId', accountId);
-    console.log('bucketName', this.bucketName);
-
     this.publicUrl =
       process.env.R2_PUBLIC_URL ||
       R2_CONFIG.PUBLIC_URL(this.bucketName, accountId);
