@@ -19,8 +19,8 @@ import { WebSocket } from 'ws';
 import { EventEmitter } from 'events';
 import { WorkflowService } from 'src/workflow/workflow.service';
 import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
-import * as path from 'path';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
+import { getMimeType } from 'src/common/utils/mime-type.util';
 
 // --- 로컬 인터페이스 정의 ---
 export interface ComfyUIRequest {
@@ -155,25 +155,6 @@ export class ComfyUIService implements OnModuleInit {
     };
   }
 
-  private getMimeType(filename: string): string {
-    const extension = path.extname(filename).toLowerCase();
-    switch (extension) {
-      case '.png':
-        return 'image/png';
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      case '.gif':
-        return 'image/gif';
-      case '.webp':
-        return 'image/webp';
-      case '.mp4':
-        return 'video/mp4';
-      default:
-        return 'application/octet-stream';
-    }
-  }
-
   private async handleExecutionResult(
     message: ComfyUIWebSocketMessage,
     userId: number,
@@ -209,7 +190,7 @@ export class ComfyUIService implements OnModuleInit {
         const fileBuffer = Buffer.from(response.data);
 
         const r2FileName = `outputs/${userId}/${prompt_id}/${imageInfo.filename}`;
-        const contentType = this.getMimeType(imageInfo.filename);
+        const contentType = getMimeType(imageInfo.filename);
         const uploadedFileUrl = await this.storageService.uploadFile(
           r2FileName,
           fileBuffer,

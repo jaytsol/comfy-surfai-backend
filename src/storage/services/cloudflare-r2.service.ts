@@ -18,19 +18,22 @@ export class CloudflareR2Service implements IStorageService {
   private readonly publicUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    const accountId = this.getRequiredConfig('storage.r2.accountId');
-    this.bucketName = this.getRequiredConfig('storage.r2.bucketName');
+    const accountId = process.env.R2_ACCOUNT_ID || '';
+    this.bucketName = process.env.R2_BUCKET_NAME || '';
+
+    console.log('accountId', accountId);
+    console.log('bucketName', this.bucketName);
 
     this.publicUrl =
-      this.configService.get<string>('storage.r2.publicUrl') ||
+      process.env.R2_PUBLIC_URL ||
       R2_CONFIG.PUBLIC_URL(this.bucketName, accountId);
 
     this.s3Client = new S3Client({
       region: R2_CONFIG.REGION,
       endpoint: R2_CONFIG.ENDPOINT(accountId),
       credentials: {
-        accessKeyId: this.getRequiredConfig('storage.r2.accessKeyId'),
-        secretAccessKey: this.getRequiredConfig('storage.r2.secretAccessKey'),
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
       },
     });
   }
