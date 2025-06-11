@@ -6,7 +6,6 @@ import {
   ApiCookieAuth,
   ApiOperation,
   ApiResponse,
-  ApiQuery,
   ApiProperty,
 } from '@nestjs/swagger';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
