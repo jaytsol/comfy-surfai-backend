@@ -44,15 +44,23 @@ export class CreateWorkflowTemplateDTO {
   definition: object;
 
   @ApiPropertyOptional({
-    description:
-      '동적 파라미터 매핑 정보. API에서 사용할 파라미터 이름을 키로 사용합니다.',
+    description: '동적 파라미터와 실제 워크플로우 노드/입력 매핑 정보',
     type: 'object',
     additionalProperties: {
-      $ref: '#/components/schemas/WorkflowParameterMappingItemDTO',
+      $ref: '#/components/schemas/WorkflowParameterMappingItemDto',
     },
     example: {
-      positive_prompt: { node_id: '6', input_name: 'text' },
-      seed: { node_id: '3', input_name: 'seed' },
+      positive_prompt: {
+        node_id: '6',
+        input_name: 'text',
+        description: '이미지의 주요 요소를 설명합니다. 상세할수록 좋습니다.',
+      },
+      seed: {
+        node_id: '3',
+        input_name: 'seed',
+        description:
+          '이미지 생성의 무작위성을 제어하는 시드 값입니다. -1로 설정하면 랜덤 시드가 사용됩니다.',
+      },
     },
   })
   @IsObject({ message: '파라미터 맵은 객체 형태여야 합니다.' })
