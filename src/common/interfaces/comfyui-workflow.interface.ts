@@ -12,6 +12,12 @@ export interface ComfyUIResponse {
   };
 }
 
+export interface GenerationResult {
+  prompt_id: string;
+  image_urls: string[];
+  client_id?: string;
+}
+
 export interface ComfyUIResult {
   success: boolean;
   message: string;
