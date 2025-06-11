@@ -9,7 +9,7 @@ import { Workflow } from 'src/common/entities/workflow.entity'; // 사용자님�
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto'; // 사용자님의 경로에 맞게 수정되었는지 확인
 import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
 import { plainToInstance } from 'class-transformer';
-import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { WorkflowParameterMappingItemDto } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { validate } from 'class-validator';
 // import { ListWorkflowTemplatesQueryDTO } from '../common/dto/workflow/list-workflow-templates-query.dto'; // 향후 페이지네이션/필터링용
 
@@ -22,7 +22,7 @@ export class WorkflowService {
 
   /**
    * 새로운 워크플로우 템플릿을 생성합니다. (Admin 전용)
-   * @param createDTO 템플릿 생성 정보 DTO
+   * @param createDTO 템플릿 생성 정보 dto
    * @param adminUserId 템플릿을 생성하는 관리자의 ID
    * @returns 생성된 Workflow 엔티티
    */
@@ -39,9 +39,9 @@ export class WorkflowService {
           Object.prototype.hasOwnProperty.call(createDTO.parameter_map, key)
         ) {
           const item = createDTO.parameter_map[key];
-          // plainToInstance를 사용하여 일반 객체를 DTO 클래스 인스턴스로 변환
+          // plainToInstance를 사용하여 일반 객체를 dto 클래스 인스턴스로 변환
           const itemDTO = plainToInstance(
-            WorkflowParameterMappingItemDTO,
+            WorkflowParameterMappingItemDto,
             item,
           );
           const errors = await validate(itemDTO);
@@ -111,7 +111,7 @@ export class WorkflowService {
   /**
    * 기존 워크플로우 템플릿을 수정합니다. (Admin 전용)
    * @param id 수정할 템플릿의 ID
-   * @param updateDTO 수정할 정보 DTO
+   * @param updateDTO 수정할 정보 dto
    * @param adminUserId 수정 작업을 수행하는 관리자 ID
    * @returns 수정된 Workflow 엔티티
    * @throws NotFoundException 해당 ID의 템플릿이 없거나 템플릿이 아닌 경우

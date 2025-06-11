@@ -20,8 +20,8 @@ import { RolesGuard } from '../common/guards/roles.guard'; // 경로 확인 및 
 import { Roles } from '../common/decorators/roles.decorator'; // 경로 확인 및 수정 필요
 import { Role } from '../common/enums/role.enum'; // User 모듈의 Role Enum 경로 확인 및 수정 필요
 
-import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto'; // 곧 생성할 DTO
-import { WorkflowTemplateResponseDTO } from 'src/common/dto/workflow/workflow-template.response.dto'; // 곧 생성할 DTO
+import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto'; // 곧 생성할 dto
+import { WorkflowTemplateResponseDTO } from 'src/common/dto/workflow/workflow-template.response.dto'; // 곧 생성할 dto
 
 import {
   ApiTags,
@@ -89,7 +89,7 @@ export class WorkflowController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '워크플로우 템플릿 목록을 반환합니다.',
-    type: [WorkflowTemplateResponseDTO], // 응답이 DTO 배열임을 명시
+    type: [WorkflowTemplateResponseDTO], // 응답이 dto 배열임을 명시
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -138,7 +138,7 @@ export class WorkflowController {
     @Param('id', ParseIntPipe) id: number, // 경로 파라미터 'id'를 숫자로 변환 및 유효성 검사
   ): Promise<WorkflowTemplateResponseDTO> {
     const workflowEntity = await this.workflowService.findOneTemplateById(id);
-    // 서비스에서 NotFoundException을 던지므로, 여기서는 성공 시 DTO 변환만 처리
+    // 서비스에서 NotFoundException을 던지므로, 여기서는 성공 시 dto 변환만 처리
     return this.mapWorkflowToResponseDTO(workflowEntity);
   }
 
@@ -228,7 +228,7 @@ export class WorkflowController {
   // ... removeTemplate 메소드는 이전 답변 참고 ...
 
   // Helper method to map Workflow entity to WorkflowTemplateResponseDTO
-  // 이전에 createTemplate 메소드에 추가했던 DTO 매핑 함수입니다.
+  // 이전에 createTemplate 메소드에 추가했던 dto 매핑 함수입니다.
   // 일관성을 위해 이 함수를 사용하거나, class-transformer 등의 라이브러리를 고려할 수 있습니다.
   private mapWorkflowToResponseDTO(
     workflow: Workflow,

@@ -65,7 +65,7 @@ export class GeneratedOutputController {
       { page, limit },
     );
 
-    // 엔티티 배열을 응답 DTO 배열로 변환
+    // 엔티티 배열을 응답 dto 배열로 변환
     const responseData = data.map((output) => this.mapToResponseDto(output));
 
     return {
