@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
-import { CreateGeneratedOutputDto } from '../common/dto/generated-output/create-generated-output.dto';
-import { ListHistoryQueryDto } from '../common/dto/generated-output/list-history-query.dto';
+import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-generated-output.dto';
+import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 
 @Injectable()
 export class GeneratedOutputService {
@@ -15,12 +15,12 @@ export class GeneratedOutputService {
   /**
    * 생성된 결과물 정보를 데이터베이스에 저장합니다.
    * ComfyUIService에서 R2 업로드 후 호출됩니다.
-   * @param createDto 저장할 생성물 정보
+   * @param createDTO 저장할 생성물 정보
    * @returns 저장된 GeneratedOutput 엔티티
    */
-  async create(createDto: CreateGeneratedOutputDto): Promise<GeneratedOutput> {
+  async create(createDTO: CreateGeneratedOutputDTO): Promise<GeneratedOutput> {
     try {
-      const newOutput = this.outputRepository.create(createDto);
+      const newOutput = this.outputRepository.create(createDTO);
       return this.outputRepository.save(newOutput);
     } catch (error) {
       console.error(
@@ -35,14 +35,14 @@ export class GeneratedOutputService {
   /**
    * 특정 사용자의 생성 기록을 최신순으로 조회합니다. (페이지네이션 적용)
    * @param userId 현재 로그인한 사용자의 ID
-   * @param queryDto 페이지네이션 옵션 (page, limit)
+   * @param queryDTO 페이지네이션 옵션 (page, limit)
    * @returns 생성 기록 데이터와 전체 개수를 포함하는 객체
    */
   async findHistoryByUser(
     userId: number,
-    queryDto: ListHistoryQueryDto,
+    queryDTO: ListHistoryQueryDTO,
   ): Promise<{ data: GeneratedOutput[]; total: number }> {
-    const { page = 1, limit = 10 } = queryDto;
+    const { page = 1, limit = 10 } = queryDTO;
 
     const [data, total] = await this.outputRepository.findAndCount({
       where: { ownerUserId: userId },

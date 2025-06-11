@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional, IsNumber, Min } from 'class-validator';
 
-export class ListHistoryQueryDto {
+export class ListHistoryQueryDTO {
   @ApiPropertyOptional({
     description: '페이지 번호 (1부터 시작)',
     minimum: 1,

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class GeneratedOutputResponseDto {
+export class GeneratedOutputResponseDTO {
   @ApiProperty({ description: '생성물의 고유 ID', example: 1 })
   id: number;
 

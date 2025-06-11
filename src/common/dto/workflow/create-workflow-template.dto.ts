@@ -10,7 +10,7 @@ import {
   IsUrl, // URL 형식 검사
   IsDefined, // definition은 객체여야 하며, 비어있지 않아야 함 (IsNotEmpty는 객체에 부적합할 수 있음)
 } from 'class-validator';
-import { WorkflowParameterMappingItemDto } from './workflow-parameter-mapping-item.dto';
+import { WorkflowParameterMappingItemDTO } from './workflow-parameter-mapping-item.dto';
 
 export class CreateWorkflowTemplateDTO {
   @ApiProperty({
@@ -48,7 +48,7 @@ export class CreateWorkflowTemplateDTO {
       '동적 파라미터 매핑 정보. API에서 사용할 파라미터 이름을 키로 사용합니다.',
     type: 'object',
     additionalProperties: {
-      $ref: '#/components/schemas/WorkflowParameterMappingItemDto',
+      $ref: '#/components/schemas/WorkflowParameterMappingItemDTO',
     },
     example: {
       positive_prompt: { node_id: '6', input_name: 'text' },
@@ -57,7 +57,7 @@ export class CreateWorkflowTemplateDTO {
   })
   @IsObject({ message: '파라미터 맵은 객체 형태여야 합니다.' })
   @IsOptional()
-  parameter_map?: Record<string, WorkflowParameterMappingItemDto>;
+  parameter_map?: Record<string, WorkflowParameterMappingItemDTO>;
 
   @ApiPropertyOptional({
     description: '미리보기 이미지 URL',

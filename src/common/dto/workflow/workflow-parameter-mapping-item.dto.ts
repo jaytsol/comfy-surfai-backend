@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 
-export class WorkflowParameterMappingItemDto {
+export class WorkflowParameterMappingItemDTO {
   @ApiProperty({
     description: '매핑될 ComfyUI 워크플로우 내 노드의 ID',
     example: '6',

@@ -9,16 +9,16 @@ import {
   ApiProperty,
 } from '@nestjs/swagger';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
-import { GeneratedOutputResponseDto } from '../common/dto/generated-output/generated-output.response.dto';
-import { ListHistoryQueryDto } from '../common/dto/generated-output/list-history-query.dto';
+import { GeneratedOutputResponseDTO } from '../common/dto/generated-output/generated-output.response.dto';
+import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 
 // --- API 응답을 위한 페이지네이션 타입 정의 (공통 타입으로 분리해도 좋습니다) ---
 class PaginatedHistoryResponse {
   @ApiProperty({
-    type: [GeneratedOutputResponseDto],
+    type: [GeneratedOutputResponseDTO],
     description: '생성 기록 데이터 배열',
   })
-  data: GeneratedOutputResponseDto[];
+  data: GeneratedOutputResponseDTO[];
 
   @ApiProperty({ example: 50, description: '전체 결과물의 수' })
   total: number;
@@ -54,11 +54,11 @@ export class GeneratedOutputController {
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자입니다.' })
   async findMyHistory(
     @Request() req,
-    @Query() queryDto: ListHistoryQueryDto, // 페이지네이션 쿼리 파라미터
+    @Query() queryDTO: ListHistoryQueryDTO, // 페이지네이션 쿼리 파라미터
   ): Promise<PaginatedHistoryResponse> {
     const userId = req.user.id;
-    const page = queryDto.page ?? 1;
-    const limit = queryDto.limit ?? 10;
+    const page = queryDTO.page ?? 1;
+    const limit = queryDTO.limit ?? 10;
 
     const { data, total } = await this.generatedOutputService.findHistoryByUser(
       userId,
@@ -66,7 +66,7 @@ export class GeneratedOutputController {
     );
 
     // 엔티티 배열을 응답 dto 배열로 변환
-    const responseData = data.map((output) => this.mapToResponseDto(output));
+    const responseData = data.map((output) => this.mapToResponseDTO(output));
 
     return {
       data: responseData,
@@ -77,10 +77,10 @@ export class GeneratedOutputController {
   }
 
   // 엔티티를 응답 DTO로 변환하는 헬퍼 메소드
-  private mapToResponseDto(
+  private mapToResponseDTO(
     output: GeneratedOutput,
-  ): GeneratedOutputResponseDto {
-    const dto = new GeneratedOutputResponseDto();
+  ): GeneratedOutputResponseDTO {
+    const dto = new GeneratedOutputResponseDTO();
     dto.id = output.id;
     dto.r2Url = output.r2Url;
     dto.originalFilename = output.originalFilename;

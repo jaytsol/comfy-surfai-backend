@@ -7,7 +7,7 @@ import {
   IsUrl,
 } from 'class-validator';
 
-export class CreateGeneratedOutputDto {
+export class CreateGeneratedOutputDTO {
   @IsUrl()
   @IsNotEmpty()
   r2Url: string;

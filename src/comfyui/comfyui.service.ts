@@ -22,7 +22,7 @@ import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import { getMimeType } from 'src/common/utils/mime-type.util';
 import { GeneratedOutputService } from 'src/generated-output/generated-output.service';
-import { CreateGeneratedOutputDto } from 'src/common/dto/generated-output/create-generated-output.dto';
+import { CreateGeneratedOutputDTO } from 'src/common/dto/generated-output/create-generated-output.dto';
 // --- 로컬 인터페이스 정의 ---
 export interface ComfyUIRequest {
   client_id: string;
@@ -202,7 +202,7 @@ export class ComfyUIService implements OnModuleInit {
         );
 
         // ✨ --- DB에 생성 결과 저장하는 로직 구현 --- ✨
-        const createOutputDto: CreateGeneratedOutputDto = {
+        const createOutputDTO: CreateGeneratedOutputDTO = {
           r2Url: uploadedFileUrl,
           originalFilename: imageInfo.filename,
           mimeType: contentType,
@@ -211,7 +211,7 @@ export class ComfyUIService implements OnModuleInit {
           sourceWorkflowId: templateId,
           usedParameters: usedParameters, // 사용된 파라미터 함께 저장
         };
-        await this.generatedOutputService.create(createOutputDto);
+        await this.generatedOutputService.create(createOutputDTO);
         console.log(
           `[ComfyUIService] Saved generation metadata to DB for file: ${imageInfo.filename}`,
         );

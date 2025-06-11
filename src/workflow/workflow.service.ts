@@ -9,7 +9,7 @@ import { Workflow } from 'src/common/entities/workflow.entity'; // 사용자님�
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto'; // 사용자님의 경로에 맞게 수정되었는지 확인
 import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
 import { plainToInstance } from 'class-transformer';
-import { WorkflowParameterMappingItemDto } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { validate } from 'class-validator';
 // import { ListWorkflowTemplatesQueryDTO } from '../common/dto/workflow/list-workflow-templates-query.dto'; // 향후 페이지네이션/필터링용
 
@@ -41,7 +41,7 @@ export class WorkflowService {
           const item = createDTO.parameter_map[key];
           // plainToInstance를 사용하여 일반 객체를 dto 클래스 인스턴스로 변환
           const itemDTO = plainToInstance(
-            WorkflowParameterMappingItemDto,
+            WorkflowParameterMappingItemDTO,
             item,
           );
           const errors = await validate(itemDTO);

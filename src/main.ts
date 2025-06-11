@@ -10,7 +10,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from '@nestjs/platform-ws';
 import * as fs from 'fs'; // 파일 시스템 모듈 임포트
 import * as path from 'path'; // 경로 모듈 임포트
-import { WorkflowParameterMappingItemDto } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 
 async function bootstrap() {
   const httpsOptions = {
@@ -79,7 +79,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig, {
-    extraModels: [WorkflowParameterMappingItemDto],
+    extraModels: [WorkflowParameterMappingItemDTO],
   });
 
   SwaggerModule.setup('docs', app, document, {
