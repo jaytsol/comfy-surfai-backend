@@ -29,6 +29,7 @@ import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import * as path from 'path'; // ✨ Node.js의 path 모듈 임포트
 
 @ApiTags('Admin - Storage Management') // Swagger 태그를 관리자용으로 명시
 @ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요
@@ -55,7 +56,7 @@ export class StorageController {
     return { originalname: file.originalname, url: fileUrl, size: file.size };
   }
 
-  @Get('file/:filename')
+  @Get('file/*')
   @ApiOperation({
     summary: '스토리지의 파일을 직접 다운로드합니다 (Admin 전용)',
   })
@@ -67,6 +68,15 @@ export class StorageController {
     // TODO: filename에 경로 순회 공격(path traversal) 방지 로직 추가 필요
     try {
       const fileBuffer = await this.storageService.getFile(filename);
+      const downloadFilename = path.basename(filename);
+
+      // ✨ Content-Disposition 헤더를 설정하여 다운로드될 파일 이름을 지정합니다.
+      // encodeURIComponent로 파일명에 특수문자가 있어도 안전하게 처리합니다.
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename*=UTF-8''${encodeURIComponent(downloadFilename)}`,
+      );
+
       // mimetype을 동적으로 설정해주는 것이 더 좋습니다.
       res.setHeader('Content-Type', 'application/octet-stream');
       res.send(fileBuffer);
@@ -76,7 +86,7 @@ export class StorageController {
     }
   }
 
-  @Delete('file/:filename')
+  @Delete('file/*')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '스토리지의 파일을 직접 삭제합니다 (Admin 전용)' })
   @ApiParam({ name: 'filename', description: '삭제할 파일의 전체 경로/이름' })
@@ -86,7 +96,7 @@ export class StorageController {
     // 성공 시 204 No Content 응답
   }
 
-  @Get('signed-url/:filename')
+  @Get('signed-url/*')
   @ApiOperation({
     summary: '파일에 대한 미리 서명된 URL을 생성합니다 (Admin 전용)',
   })
