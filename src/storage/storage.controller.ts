@@ -66,7 +66,6 @@ export class StorageController {
   @ApiResponse({ status: 200, description: '파일 다운로드 성공' })
   @ApiResponse({ status: 404, description: '파일을 찾을 수 없음' })
   async getFile(@Request() req: ExpressRequest, @Res() res: Response) {
-    console.log('req', req.params.path);
     const pathSegments = req.params.path;
     const filename = Array.isArray(pathSegments)
       ? pathSegments.join('/')
@@ -75,11 +74,6 @@ export class StorageController {
       throw new BadRequestException('Invalid or malicious file path detected.');
     }
 
-    // --- ✨ 디버깅을 위한 로그 추가 (단순화 버전) ---
-    console.log('--- [DEBUG] /storage/file/* endpoint called ---');
-    console.log(`Value received for 'filename' parameter: "${filename}"`);
-    console.log(`Type of 'filename' parameter: ${typeof filename}`);
-    // --- 디버깅 로그 끝 ---
     if (!filename) {
       return res
         .status(HttpStatus.BAD_REQUEST)
@@ -115,7 +109,10 @@ export class StorageController {
     description: '삭제할 파일의 전체 경로를 "file/" 뒤에 이어서 요청합니다.',
   })
   async deleteFile(@Request() req: ExpressRequest) {
-    const filename = req.params[0];
+    const pathSegments = req.params.path;
+    const filename = Array.isArray(pathSegments)
+      ? pathSegments.join('/')
+      : pathSegments;
     // TODO: 경로 순회 공격 방지
     await this.storageService.deleteFile(filename);
     // 성공 시 204 No Content 응답
@@ -128,7 +125,10 @@ export class StorageController {
       'URL을 생성할 파일의 전체 경로를 "signed-url/" 뒤에 이어서 요청합니다.',
   })
   async getSignedUrl(@Request() req: ExpressRequest) {
-    const filename = req.params[0];
+    const pathSegments = req.params.path;
+    const filename = Array.isArray(pathSegments)
+      ? pathSegments.join('/')
+      : pathSegments;
     // TODO: 경로 순회 공격 방지
     const url = await this.storageService.getSignedUrl(filename);
     return { url };
