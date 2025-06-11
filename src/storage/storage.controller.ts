@@ -23,19 +23,18 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { BadRequestException } from '@nestjs/common';
-// ✨ 인증/인가 관련 import
 import { v4 as uuidv4 } from 'uuid';
 import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
-import * as path from 'path'; // ✨ Node.js의 path 모듈 임포트
+import * as path from 'path';
 import { getMimeType } from 'src/common/utils/mime-type.util';
 
-@ApiTags('Admin - Storage Management') // Swagger 태그를 관리자용으로 명시
-@ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요
-@UseGuards(AuthenticatedGuard, RolesGuard) // ✨ 컨트롤러 전체에 가드 적용
-@Roles(Role.Admin) // ✨ 이 컨트롤러의 모든 API는 Admin 역할만 사용 가능
+@ApiTags('Admin - Storage Management')
+@ApiCookieAuth()
+@UseGuards(AuthenticatedGuard, RolesGuard)
+@Roles(Role.Admin)
 @Controller('storage')
 export class StorageController {
   constructor(
@@ -47,7 +46,6 @@ export class StorageController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: '파일을 직접 스토리지에 업로드합니다 (Admin 전용)' })
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    // 파일명을 그대로 사용하면 중복될 수 있으므로, 고유한 이름을 만들어주는 것이 좋습니다.
     const fileName = `${uuidv4()}-${file.originalname}`;
     const fileUrl = await this.storageService.uploadFile(
       fileName,
@@ -80,20 +78,16 @@ export class StorageController {
         .send({ message: 'Filename parameter is required.' });
     }
 
-    // TODO: filename에 경로 순회 공격(path traversal) 방지 로직 추가 필요
     try {
       const fileBuffer = await this.storageService.getFile(filename);
       const downloadFilename = path.basename(filename);
       const contentType = getMimeType(downloadFilename);
 
-      // ✨ Content-Disposition 헤더를 설정하여 다운로드될 파일 이름을 지정합니다.
-      // encodeURIComponent로 파일명에 특수문자가 있어도 안전하게 처리합니다.
       res.setHeader(
         'Content-Disposition',
         `attachment; filename*=UTF-8''${encodeURIComponent(downloadFilename)}`,
       );
 
-      // mimetype을 동적으로 설정해주는 것이 더 좋습니다.
       res.setHeader('Content-Type', contentType);
       res.send(fileBuffer);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -113,9 +107,12 @@ export class StorageController {
     const filename = Array.isArray(pathSegments)
       ? pathSegments.join('/')
       : pathSegments;
-    // TODO: 경로 순회 공격 방지
+
+    if (!filename || filename.includes('..')) {
+      throw new BadRequestException('Invalid or malicious file path detected.');
+    }
+
     await this.storageService.deleteFile(filename);
-    // 성공 시 204 No Content 응답
   }
 
   @Get('signed-url/*')
@@ -129,7 +126,11 @@ export class StorageController {
     const filename = Array.isArray(pathSegments)
       ? pathSegments.join('/')
       : pathSegments;
-    // TODO: 경로 순회 공격 방지
+
+    if (!filename || filename.includes('..')) {
+      throw new BadRequestException('Invalid or malicious file path detected.');
+    }
+
     const url = await this.storageService.getSignedUrl(filename);
     return { url };
   }
