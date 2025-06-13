@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
 import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-generated-output.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
+import { IStorageService } from 'src/storage/interfaces/storage.interface';
+import * as path from 'path';
 
 @Injectable()
 export class GeneratedOutputService {
   constructor(
     @InjectRepository(GeneratedOutput)
     private readonly outputRepository: Repository<GeneratedOutput>,
+    @Inject('IStorageService')
+    private readonly storageService: IStorageService,
   ) {}
 
   /**
@@ -55,6 +59,40 @@ export class GeneratedOutputService {
     });
 
     return { data, total };
+  }
+
+  /**
+   * 특정 결과물에 대한 다운로드용 미리 서명된 URL을 생성합니다.
+   * @param outputId 결과물의 DB ID
+   * @param userId 요청한 사용자의 ID (소유권 확인용)
+   * @returns 미리 서명된 URL 문자열
+   */
+  async generateDownloadUrl(outputId: number, userId: number): Promise<string> {
+    // 1. DB에서 결과물 조회. 동시에 ownerUserId로 소유권 확인
+    const output = await this.outputRepository.findOneBy({
+      id: outputId,
+      ownerUserId: userId,
+    });
+
+    if (!output) {
+      throw new NotFoundException(
+        '결과물을 찾을 수 없거나 접근 권한이 없습니다.',
+      );
+    }
+
+    // 2. R2에 저장된 실제 파일 경로(Key) 추출
+    const r2Key = new URL(output.r2Url).pathname.substring(1);
+
+    // 3. 다운로드 시 사용할 사용자 친화적인 파일명 생성
+    // 예: surfai-123.png
+    const extension = path.extname(r2Key);
+    const newFileName = `surfai-output-${output.id}${extension}`;
+
+    // 4. StorageService를 통해 미리 서명된 URL 생성 요청
+    return this.storageService.getSignedUrl(r2Key, {
+      downloadFileName: newFileName,
+      expiresIn: 600,
+    });
   }
 
   // TODO: 향후 특정 생성물 상세 조회, 삭제 등의 메소드 추가

@@ -5,9 +5,13 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { IStorageService } from '../interfaces/storage.interface';
+import {
+  GetSignedUrlOptions,
+  IStorageService,
+} from '../interfaces/storage.interface';
 import { R2_CONFIG } from '../constants/storage.constants';
 
 @Injectable()
@@ -105,13 +109,23 @@ export class CloudflareR2Service implements IStorageService {
     return `${this.publicUrl}/${encodeURIComponent(fileName)}`;
   }
 
-  async getSignedUrl(fileName: string, expiresIn = 3600): Promise<string> {
+  async getSignedUrl(
+    fileName: string,
+    options: GetSignedUrlOptions = {},
+  ): Promise<string> {
     try {
-      const command = new GetObjectCommand({
+      const { downloadFileName, expiresIn = 3600 } = options;
+
+      const commandInput: GetObjectCommandInput = {
         Bucket: this.bucketName,
         Key: fileName,
-      });
+      };
 
+      if (downloadFileName) {
+        commandInput.ResponseContentDisposition = `attachment; filename*=UTF-8''${encodeURIComponent(downloadFileName)}`;
+      }
+
+      const command = new GetObjectCommand(commandInput);
       return await getSignedUrl(this.s3Client, command, { expiresIn });
     } catch (error) {
       const errorMessage = `Failed to generate signed URL for ${fileName}: ${error.message}`;

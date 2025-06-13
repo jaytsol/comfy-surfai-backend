@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  Request,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { GeneratedOutputService } from './generated-output.service';
 import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
 import {
@@ -31,7 +39,7 @@ class PaginatedHistoryResponse {
 }
 // -------------------------------------------------------------------------
 
-@ApiTags('My History') // Swagger UI 그룹핑
+@ApiTags('Outputs & History')
 @ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요
 @UseGuards(AuthenticatedGuard) // 로그인한 사용자만 접근 가능
 @Controller('my-history') // 엔드포인트 기본 경로
@@ -39,6 +47,27 @@ export class GeneratedOutputController {
   constructor(
     private readonly generatedOutputService: GeneratedOutputService,
   ) {}
+
+  @Get('my-outputs/:id/download-url')
+  @UseGuards(AuthenticatedGuard) // 로그인한 사용자만 접근 가능
+  @ApiOperation({ summary: '생성된 결과물에 대한 다운로드 URL 요청' })
+  @ApiResponse({ status: 200, description: '미리 서명된 다운로드 URL 반환' })
+  @ApiResponse({
+    status: 404,
+    description: '결과물을 찾을 수 없거나 접근 권한 없음',
+  })
+  async getDownloadUrl(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<{ downloadUrl: string }> {
+    const userId = req.user.id;
+    // 서비스에 outputId와 userId를 전달하여 권한 확인 및 URL 생성 요청
+    const downloadUrl = await this.generatedOutputService.generateDownloadUrl(
+      id,
+      userId,
+    );
+    return { downloadUrl };
+  }
 
   @Get() // GET /my-history
   @ApiOperation({
