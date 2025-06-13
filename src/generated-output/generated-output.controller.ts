@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  Request,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { GeneratedOutputService } from './generated-output.service';
 import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
 import {
@@ -31,14 +39,51 @@ class PaginatedHistoryResponse {
 }
 // -------------------------------------------------------------------------
 
-@ApiTags('My History') // Swagger UI 그룹핑
+@ApiTags('My Outputs')
 @ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요
-@UseGuards(AuthenticatedGuard) // 로그인한 사용자만 접근 가능
-@Controller('my-history') // 엔드포인트 기본 경로
+@UseGuards(AuthenticatedGuard)
+@Controller('my-outputs') // 엔드포인트 기본 경로
 export class GeneratedOutputController {
   constructor(
     private readonly generatedOutputService: GeneratedOutputService,
   ) {}
+
+  // ✨ --- 이미지 표시용 URL 요청 API --- ✨
+  @Get(':id/view-url')
+  @ApiOperation({ summary: '생성된 결과물을 보기 위한 미리 서명된 URL 요청' })
+  async getViewUrl(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<{ viewUrl: string }> {
+    const userId = req.user.id;
+    // generateViewUrl 서비스 메소드를 새로 만들거나, 기존 메소드를 재활용합니다.
+    const viewUrl = await this.generatedOutputService.generateViewUrl(
+      id,
+      userId,
+    );
+    return { viewUrl };
+  }
+
+  // --- 다운로드 URL 생성 API ---
+  @Get(':id/download-url')
+  @ApiOperation({ summary: '생성된 결과물에 대한 다운로드 URL 요청' })
+  @ApiResponse({ status: 200, description: '미리 서명된 다운로드 URL 반환' })
+  @ApiResponse({
+    status: 404,
+    description: '결과물을 찾을 수 없거나 접근 권한 없음',
+  })
+  async getDownloadUrl(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<{ downloadUrl: string }> {
+    const userId = req.user.id;
+    // 서비스에 outputId와 userId를 전달하여 권한 확인 및 URL 생성 요청
+    const downloadUrl = await this.generatedOutputService.generateDownloadUrl(
+      id,
+      userId,
+    );
+    return { downloadUrl };
+  }
 
   @Get() // GET /my-history
   @ApiOperation({

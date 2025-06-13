@@ -1,16 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
 import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-generated-output.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
+import { IStorageService } from 'src/storage/interfaces/storage.interface';
+import * as path from 'path';
 
 @Injectable()
 export class GeneratedOutputService {
   constructor(
     @InjectRepository(GeneratedOutput)
     private readonly outputRepository: Repository<GeneratedOutput>,
+    @Inject('IStorageService')
+    private readonly storageService: IStorageService,
   ) {}
+
+  /**
+   * (Helper) 특정 사용자가 소유한 단일 결과물을 찾아 반환합니다.
+   * 소유권이 없거나 결과물이 없으면 NotFoundException을 던집니다.
+   */
+  private async findOneOwnedByUser(
+    outputId: number,
+    userId: number,
+  ): Promise<GeneratedOutput> {
+    const output = await this.outputRepository.findOneBy({
+      id: outputId,
+      ownerUserId: userId,
+    });
+    if (!output) {
+      throw new NotFoundException(
+        `Output with ID #${outputId} not found or you do not have permission to access it.`,
+      );
+    }
+    return output;
+  }
 
   /**
    * 생성된 결과물 정보를 데이터베이스에 저장합니다.
@@ -55,6 +79,39 @@ export class GeneratedOutputService {
     });
 
     return { data, total };
+  }
+
+  /**
+   * 파일을 '표시'하기 위한 미리 서명된 URL을 생성합니다. (예: <img> 태그의 src용)
+   * @param outputId 결과물의 DB ID
+   * @param userId 요청한 사용자의 ID (소유권 확인용)
+   * @returns 인라인 표시에 사용될 미리 서명된 URL 문자열
+   */
+  async generateViewUrl(outputId: number, userId: number): Promise<string> {
+    const output = await this.findOneOwnedByUser(outputId, userId);
+    const r2Key = new URL(output.r2Url).pathname.substring(1);
+
+    // downloadFileName 옵션 없이 getSignedUrl 호출
+    return this.storageService.getSignedUrl(r2Key, { expiresIn: 3600 }); // 예: URL 유효시간 1시간
+  }
+
+  /**
+   * 특정 결과물에 대한 다운로드용 미리 서명된 URL을 생성합니다.
+   * @param outputId 결과물의 DB ID
+   * @param userId 요청한 사용자의 ID (소유권 확인용)
+   * @returns 미리 서명된 URL 문자열
+   */
+  async generateDownloadUrl(outputId: number, userId: number): Promise<string> {
+    const output = await this.findOneOwnedByUser(outputId, userId);
+    const r2Key = new URL(output.r2Url).pathname.substring(1);
+
+    const extension = path.extname(r2Key);
+    const newFileName = `surfai-output-${output.id}${extension}`;
+
+    return this.storageService.getSignedUrl(r2Key, {
+      downloadFileName: newFileName,
+      expiresIn: 600,
+    });
   }
 
   // TODO: 향후 특정 생성물 상세 조회, 삭제 등의 메소드 추가

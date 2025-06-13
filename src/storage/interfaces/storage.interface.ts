@@ -8,7 +8,10 @@ export interface IStorageService {
   getFile(fileName: string): Promise<Buffer>;
   deleteFile(fileName: string): Promise<void>;
   getFileUrl(fileName: string): string;
-  getSignedUrl(fileName: string, expiresIn?: number): Promise<string>;
+  getSignedUrl(
+    fileName: string,
+    options?: GetSignedUrlOptions,
+  ): Promise<string>;
 }
 
 export interface FileUploadResult {
@@ -16,4 +19,9 @@ export interface FileUploadResult {
   key: string;
   size: number;
   contentType: string;
+}
+
+export interface GetSignedUrlOptions {
+  expiresIn?: number;
+  downloadFileName?: string;
 }

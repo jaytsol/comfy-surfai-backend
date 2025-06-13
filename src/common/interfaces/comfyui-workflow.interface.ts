@@ -14,8 +14,7 @@ export interface ComfyUIResponse {
 
 export interface GenerationResult {
   prompt_id: string;
-  image_urls: string[];
-  client_id?: string;
+  outputs: { id: number; r2Url: string }[];
 }
 
 export interface ComfyUIResult {
