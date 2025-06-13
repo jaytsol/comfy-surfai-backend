@@ -48,7 +48,7 @@ export class GeneratedOutputController {
     private readonly generatedOutputService: GeneratedOutputService,
   ) {}
 
-  @Get('my-outputs/:id/download-url')
+  @Get(':id/download-url')
   @UseGuards(AuthenticatedGuard) // 로그인한 사용자만 접근 가능
   @ApiOperation({ summary: '생성된 결과물에 대한 다운로드 URL 요청' })
   @ApiResponse({ status: 200, description: '미리 서명된 다운로드 URL 반환' })
