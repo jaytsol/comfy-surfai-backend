@@ -17,6 +17,26 @@ export class GeneratedOutputService {
   ) {}
 
   /**
+   * (Helper) 특정 사용자가 소유한 단일 결과물을 찾아 반환합니다.
+   * 소유권이 없거나 결과물이 없으면 NotFoundException을 던집니다.
+   */
+  private async findOneOwnedByUser(
+    outputId: number,
+    userId: number,
+  ): Promise<GeneratedOutput> {
+    const output = await this.outputRepository.findOneBy({
+      id: outputId,
+      ownerUserId: userId,
+    });
+    if (!output) {
+      throw new NotFoundException(
+        `Output with ID #${outputId} not found or you do not have permission to access it.`,
+      );
+    }
+    return output;
+  }
+
+  /**
    * 생성된 결과물 정보를 데이터베이스에 저장합니다.
    * ComfyUIService에서 R2 업로드 후 호출됩니다.
    * @param createDTO 저장할 생성물 정보
@@ -62,33 +82,32 @@ export class GeneratedOutputService {
   }
 
   /**
+   * 파일을 '표시'하기 위한 미리 서명된 URL을 생성합니다. (예: <img> 태그의 src용)
+   * @param outputId 결과물의 DB ID
+   * @param userId 요청한 사용자의 ID (소유권 확인용)
+   * @returns 인라인 표시에 사용될 미리 서명된 URL 문자열
+   */
+  async generateViewUrl(outputId: number, userId: number): Promise<string> {
+    const output = await this.findOneOwnedByUser(outputId, userId);
+    const r2Key = new URL(output.r2Url).pathname.substring(1);
+
+    // downloadFileName 옵션 없이 getSignedUrl 호출
+    return this.storageService.getSignedUrl(r2Key, { expiresIn: 3600 }); // 예: URL 유효시간 1시간
+  }
+
+  /**
    * 특정 결과물에 대한 다운로드용 미리 서명된 URL을 생성합니다.
    * @param outputId 결과물의 DB ID
    * @param userId 요청한 사용자의 ID (소유권 확인용)
    * @returns 미리 서명된 URL 문자열
    */
   async generateDownloadUrl(outputId: number, userId: number): Promise<string> {
-    // 1. DB에서 결과물 조회. 동시에 ownerUserId로 소유권 확인
-    const output = await this.outputRepository.findOneBy({
-      id: outputId,
-      ownerUserId: userId,
-    });
-
-    if (!output) {
-      throw new NotFoundException(
-        '결과물을 찾을 수 없거나 접근 권한이 없습니다.',
-      );
-    }
-
-    // 2. R2에 저장된 실제 파일 경로(Key) 추출
+    const output = await this.findOneOwnedByUser(outputId, userId);
     const r2Key = new URL(output.r2Url).pathname.substring(1);
 
-    // 3. 다운로드 시 사용할 사용자 친화적인 파일명 생성
-    // 예: surfai-123.png
     const extension = path.extname(r2Key);
     const newFileName = `surfai-output-${output.id}${extension}`;
 
-    // 4. StorageService를 통해 미리 서명된 URL 생성 요청
     return this.storageService.getSignedUrl(r2Key, {
       downloadFileName: newFileName,
       expiresIn: 600,

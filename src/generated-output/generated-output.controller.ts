@@ -39,17 +39,33 @@ class PaginatedHistoryResponse {
 }
 // -------------------------------------------------------------------------
 
-@ApiTags('Outputs & History')
+@ApiTags('My Outputs')
 @ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요
-@UseGuards(AuthenticatedGuard) // 로그인한 사용자만 접근 가능
-@Controller('my-history') // 엔드포인트 기본 경로
+@UseGuards(AuthenticatedGuard)
+@Controller('my-outputs') // 엔드포인트 기본 경로
 export class GeneratedOutputController {
   constructor(
     private readonly generatedOutputService: GeneratedOutputService,
   ) {}
 
+  // ✨ --- 이미지 표시용 URL 요청 API --- ✨
+  @Get(':id/view-url')
+  @ApiOperation({ summary: '생성된 결과물을 보기 위한 미리 서명된 URL 요청' })
+  async getViewUrl(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<{ viewUrl: string }> {
+    const userId = req.user.id;
+    // generateViewUrl 서비스 메소드를 새로 만들거나, 기존 메소드를 재활용합니다.
+    const viewUrl = await this.generatedOutputService.generateViewUrl(
+      id,
+      userId,
+    );
+    return { viewUrl };
+  }
+
+  // --- 다운로드 URL 생성 API ---
   @Get(':id/download-url')
-  @UseGuards(AuthenticatedGuard) // 로그인한 사용자만 접근 가능
   @ApiOperation({ summary: '생성된 결과물에 대한 다운로드 URL 요청' })
   @ApiResponse({ status: 200, description: '미리 서명된 다운로드 URL 반환' })
   @ApiResponse({
