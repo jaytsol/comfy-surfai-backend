@@ -157,7 +157,6 @@ export class ComfyUIService implements OnModuleInit {
   private async handleExecutionResult(
     message: ComfyUIWebSocketMessage,
     userId: number,
-
     templateId: number,
     usedParameters?: Record<string, any>,
   ) {
@@ -170,7 +169,7 @@ export class ComfyUIService implements OnModuleInit {
       `[ComfyUIService] Handling execution result for prompt #${prompt_id}. Found ${finalImages.length} final images.`,
     );
 
-    const uploadPromises = finalImages.map(async (imageInfo) => {
+    const uploadAndSavePromises = finalImages.map(async (imageInfo) => {
       try {
         const params = new URLSearchParams({
           filename: imageInfo.filename,
@@ -211,12 +210,14 @@ export class ComfyUIService implements OnModuleInit {
           sourceWorkflowId: templateId,
           usedParameters: usedParameters, // 사용된 파라미터 함께 저장
         };
-        await this.generatedOutputService.create(createOutputDTO);
+        const savedOutput =
+          await this.generatedOutputService.create(createOutputDTO);
         console.log(
-          `[ComfyUIService] Saved generation metadata to DB for file: ${imageInfo.filename}`,
+          `Saved generation metadata to DB with ID: ${savedOutput.id}`,
         );
 
-        return uploadedFileUrl;
+        // ✨ 프론트엔드에 보낼 정보로 DB id와 R2 URL을 함께 반환합니다.
+        return { id: savedOutput.id, r2Url: savedOutput.r2Url };
       } catch (error) {
         console.error(
           `[ComfyUIService] Failed to process and upload image ${imageInfo.filename} for prompt #${prompt_id}:`,
@@ -226,14 +227,14 @@ export class ComfyUIService implements OnModuleInit {
       }
     });
 
-    const uploadedUrls = (await Promise.all(uploadPromises)).filter(
-      (url): url is string => url !== null,
+    const uploadedUrls = (await Promise.all(uploadAndSavePromises)).filter(
+      (output): output is { id: number; r2Url: string } => output !== null,
     );
 
     if (uploadedUrls.length > 0) {
       const resultPayload: GenerationResult = {
         prompt_id: prompt_id,
-        image_urls: uploadedUrls,
+        outputs: uploadedUrls,
       };
 
       // EventsGateway가 수신할 'generation_result' 이벤트 발생
