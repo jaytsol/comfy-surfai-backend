@@ -106,7 +106,11 @@ export class CloudflareR2Service implements IStorageService {
   }
 
   getFileUrl(fileName: string): string {
-    return `${this.publicUrl}/${encodeURIComponent(fileName)}`;
+    const encodedFileName = fileName
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/');
+    return `${this.publicUrl}/${encodedFileName}`;
   }
 
   async getSignedUrl(
