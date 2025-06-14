@@ -6,6 +6,9 @@ import {
   Request,
   Param,
   ParseIntPipe,
+  HttpCode,
+  Delete,
+  HttpStatus,
 } from '@nestjs/common';
 import { GeneratedOutputService } from './generated-output.service';
 import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
@@ -118,6 +121,21 @@ export class GeneratedOutputController {
       page,
       lastPage: Math.ceil(total / limit),
     };
+  }
+
+  // ✨ --- 새로 추가할 삭제 엔드포인트 --- ✨
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT) // 성공 시 204 No Content 응답 반환
+  @ApiOperation({ summary: '나의 생성 기록 삭제' })
+  @ApiResponse({ status: 204, description: '성공적으로 삭제됨' })
+  @ApiResponse({ status: 403, description: '권한 없음' }) // 서비스에서 소유권 불일치 시
+  @ApiResponse({ status: 404, description: '삭제할 리소스를 찾을 수 없음' })
+  async removeOutput(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<void> {
+    const userId = req.user.id;
+    await this.generatedOutputService.remove(id, userId);
   }
 
   // 엔티티를 응답 DTO로 변환하는 헬퍼 메소드

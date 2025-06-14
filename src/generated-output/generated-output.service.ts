@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
@@ -53,6 +58,45 @@ export class GeneratedOutputService {
       );
       // 필요시 더 구체적인 예외 처리
       throw error;
+    }
+  }
+
+  // ✨ --- 삭제 메소드 --- ✨
+  /**
+   * 특정 생성 기록을 삭제합니다.
+   * R2 스토리지의 실제 파일을 먼저 삭제하고, 그 다음 데이터베이스 레코드를 삭제합니다.
+   * @param outputId 삭제할 결과물의 DB ID
+   * @param userId 요청한 사용자의 ID (소유권 확인용)
+   */
+  async remove(outputId: number, userId: number): Promise<void> {
+    // 1. DB에서 결과물을 찾고, 동시에 소유권을 확인합니다.
+    const output = await this.findOneOwnedByUser(outputId, userId);
+    // findOneOwnedByUser는 결과물이 없거나 권한이 없으면 NotFoundException을 던집니다.
+
+    // 2. R2에 저장된 실제 파일 경로(Key)를 추출합니다.
+    const r2Key = new URL(output.r2Url).pathname.substring(1);
+
+    try {
+      // 3. R2에서 파일을 먼저 삭제합니다.
+      await this.storageService.deleteFile(r2Key);
+      console.log(
+        `[GeneratedOutputService] Successfully deleted file from R2: ${r2Key}`,
+      );
+
+      // 4. R2 파일 삭제 성공 시, 데이터베이스에서 레코드를 삭제합니다.
+      await this.outputRepository.remove(output);
+      console.log(
+        `[GeneratedOutputService] Successfully deleted output record from DB: ID #${outputId}`,
+      );
+    } catch (error) {
+      console.error(
+        `[GeneratedOutputService] Failed to delete output #${outputId}. Error:`,
+        error,
+      );
+      // R2 파일 삭제나 DB 레코드 삭제 중 오류가 발생할 경우
+      throw new InternalServerErrorException(
+        '삭제 처리 중 오류가 발생했습니다.',
+      );
     }
   }
 
