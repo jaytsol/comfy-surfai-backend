@@ -16,7 +16,6 @@ import {
   ApiResponse,
   ApiProperty,
 } from '@nestjs/swagger';
-import { GeneratedOutput } from '../common/entities/generated-output.entity';
 import { GeneratedOutputResponseDTO } from '../common/dto/generated-output/generated-output.response.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 
