@@ -122,12 +122,10 @@ export class GeneratedOutputController {
   }
 
   // 엔티티를 응답 DTO로 변환하는 헬퍼 메소드
-  private mapToResponseDTO(
-    output: GeneratedOutput,
-  ): GeneratedOutputResponseDTO {
+  private mapToResponseDTO(output: any): GeneratedOutputResponseDTO {
     const dto = new GeneratedOutputResponseDTO();
     dto.id = output.id;
-    dto.r2Url = output.r2Url;
+    dto.viewUrl = output.viewUrl;
     dto.originalFilename = output.originalFilename;
     dto.mimeType = output.mimeType;
     dto.sourceWorkflowId = output.sourceWorkflowId;

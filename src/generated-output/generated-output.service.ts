@@ -78,7 +78,22 @@ export class GeneratedOutputService {
       // relations: ['sourceWorkflow'], // 필요시 사용한 템플릿 정보도 함께 로드
     });
 
-    return { data, total };
+    // 각 결과물에 대해 미리 서명된 URL을 비동기적으로 생성합니다.
+    const dataWithUrls = await Promise.all(
+      data.map(async (output) => {
+        const r2Key = new URL(output.r2Url).pathname.substring(1);
+        const viewUrl = await this.storageService.getSignedUrl(r2Key, {
+          expiresIn: 3600,
+        }); // 1시간 유효
+        // 엔티티 객체에 viewUrl을 임시로 추가합니다. (또는 DTO를 사용)
+        return {
+          ...output,
+          viewUrl,
+        };
+      }),
+    );
+
+    return { data: dataWithUrls, total };
   }
 
   /**
