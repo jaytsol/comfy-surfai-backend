@@ -6,6 +6,9 @@ import {
   Request,
   Param,
   ParseIntPipe,
+  HttpCode,
+  Delete,
+  HttpStatus,
 } from '@nestjs/common';
 import { GeneratedOutputService } from './generated-output.service';
 import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
@@ -16,7 +19,6 @@ import {
   ApiResponse,
   ApiProperty,
 } from '@nestjs/swagger';
-import { GeneratedOutput } from '../common/entities/generated-output.entity';
 import { GeneratedOutputResponseDTO } from '../common/dto/generated-output/generated-output.response.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 
@@ -121,13 +123,26 @@ export class GeneratedOutputController {
     };
   }
 
+  // ✨ --- 새로 추가할 삭제 엔드포인트 --- ✨
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT) // 성공 시 204 No Content 응답 반환
+  @ApiOperation({ summary: '나의 생성 기록 삭제' })
+  @ApiResponse({ status: 204, description: '성공적으로 삭제됨' })
+  @ApiResponse({ status: 403, description: '권한 없음' }) // 서비스에서 소유권 불일치 시
+  @ApiResponse({ status: 404, description: '삭제할 리소스를 찾을 수 없음' })
+  async removeOutput(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<void> {
+    const userId = req.user.id;
+    await this.generatedOutputService.remove(id, userId);
+  }
+
   // 엔티티를 응답 DTO로 변환하는 헬퍼 메소드
-  private mapToResponseDTO(
-    output: GeneratedOutput,
-  ): GeneratedOutputResponseDTO {
+  private mapToResponseDTO(output: any): GeneratedOutputResponseDTO {
     const dto = new GeneratedOutputResponseDTO();
     dto.id = output.id;
-    dto.r2Url = output.r2Url;
+    dto.viewUrl = output.viewUrl;
     dto.originalFilename = output.originalFilename;
     dto.mimeType = output.mimeType;
     dto.sourceWorkflowId = output.sourceWorkflowId;

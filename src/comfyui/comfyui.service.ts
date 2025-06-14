@@ -12,7 +12,6 @@ import {
   ComfyUIInput,
   ComfyUIResponse,
   ComfyUIWebSocketMessage,
-  GenerationResult,
 } from 'src/common/interfaces/comfyui-workflow.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'ws';
@@ -210,14 +209,7 @@ export class ComfyUIService implements OnModuleInit {
           sourceWorkflowId: templateId,
           usedParameters: usedParameters, // 사용된 파라미터 함께 저장
         };
-        const savedOutput =
-          await this.generatedOutputService.create(createOutputDTO);
-        console.log(
-          `Saved generation metadata to DB with ID: ${savedOutput.id}`,
-        );
-
-        // ✨ 프론트엔드에 보낼 정보로 DB id와 R2 URL을 함께 반환합니다.
-        return { id: savedOutput.id, r2Url: savedOutput.r2Url };
+        return await this.generatedOutputService.create(createOutputDTO);
       } catch (error) {
         console.error(
           `[ComfyUIService] Failed to process and upload image ${imageInfo.filename} for prompt #${prompt_id}:`,
@@ -227,17 +219,34 @@ export class ComfyUIService implements OnModuleInit {
       }
     });
 
-    const uploadedUrls = (await Promise.all(uploadAndSavePromises)).filter(
-      (output): output is { id: number; r2Url: string } => output !== null,
+    const successfulOutputs = (await Promise.all(uploadAndSavePromises)).filter(
+      (output) => !!output,
     );
 
-    if (uploadedUrls.length > 0) {
-      const resultPayload: GenerationResult = {
+    if (successfulOutputs.length > 0) {
+      // ✨ 컨트롤러의 DTO 매핑 함수를 재사용하거나 유사한 로직으로,
+      //    엔티티를 프론트엔드가 사용할 DTO (HistoryItemData와 유사한 구조)로 변환합니다.
+      const outputsForFrontend = await Promise.all(
+        successfulOutputs.map(async (output) => {
+          const r2Key = new URL(output.r2Url).pathname.substring(1);
+          const viewUrl = await this.storageService.getSignedUrl(r2Key, {
+            expiresIn: 3600,
+          });
+          return {
+            id: output.id,
+            viewUrl: viewUrl,
+            originalFilename: output.originalFilename,
+            createdAt: output.createdAt.toISOString(),
+            usedParameters: output.usedParameters,
+          };
+        }),
+      );
+
+      const resultPayload = {
         prompt_id: prompt_id,
-        outputs: uploadedUrls,
+        outputs: outputsForFrontend, // ✨ 풍부한 정보가 담긴 객체 배열 전달
       };
 
-      // EventsGateway가 수신할 'generation_result' 이벤트 발생
       this.wsMessage$.emit('generation_result', {
         type: 'generation_result',
         data: resultPayload,

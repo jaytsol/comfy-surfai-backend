@@ -5,10 +5,10 @@ export class GeneratedOutputResponseDTO {
   id: number;
 
   @ApiProperty({
-    description: 'Cloudflare R2에 저장된 파일 URL',
-    example: 'https://your-r2-bucket.pub/outputs/...',
+    description: '이미지를 표시하기 위한 미리 서명된 URL',
+    example: 'https://...',
   })
-  r2Url: string;
+  viewUrl: string;
 
   @ApiProperty({
     description: 'ComfyUI에서 생성된 원본 파일명',
