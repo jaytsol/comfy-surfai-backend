@@ -163,7 +163,7 @@ export class ComfyUIService implements OnModuleInit {
     if (!messageData.output?.images) return;
 
     const { prompt_id, output } = messageData;
-    const finalImages = output.images.filter((img) => img.type === 'output');
+    const finalImages = output.images.filter((img) => img.type === 'temp');
     console.log(
       `[ComfyUIService] Handling execution result for prompt #${prompt_id}. Found ${finalImages.length} final images.`,
     );
