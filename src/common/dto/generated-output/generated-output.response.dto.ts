@@ -35,4 +35,7 @@ export class GeneratedOutputResponseDTO {
 
   @ApiProperty({ description: '생성 일시 (ISO 8601 형식)' })
   createdAt: Date;
+
+  @ApiProperty({ description: '이 결과물을 생성한 ComfyUI 작업의 고유 ID' })
+  promptId: string;
 }

@@ -148,6 +148,7 @@ export class GeneratedOutputController {
     dto.sourceWorkflowId = output.sourceWorkflowId;
     dto.usedParameters = output.usedParameters;
     dto.createdAt = output.createdAt;
+    dto.promptId = output.promptId;
     return dto;
   }
 }
