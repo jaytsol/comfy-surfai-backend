@@ -1,14 +1,19 @@
 // src/common/interfaces/comfyui-workflow.interface.ts
+export interface ComfyUIOutputFile {
+  filename: string;
+  subfolder: string;
+  type: 'output' | 'temp' | 'input';
+  // 비디오의 경우 추가적인 포맷 정보가 있을 수 있습니다.
+  format?: string;
+}
+
 export interface ComfyUIResponse {
   prompt_id: string;
   number: number;
   node_errors: Record<string, any>;
-  output: {
-    images: {
-      filename: string;
-      subfolder: string;
-      type: string;
-    }[];
+  output?: {
+    images?: ComfyUIOutputFile[];
+    gifs?: ComfyUIOutputFile[];
   };
 }
 

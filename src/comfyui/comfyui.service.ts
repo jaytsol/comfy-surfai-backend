@@ -22,6 +22,7 @@ import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import { getMimeType } from 'src/common/utils/mime-type.util';
 import { GeneratedOutputService } from 'src/generated-output/generated-output.service';
 import { CreateGeneratedOutputDTO } from 'src/common/dto/generated-output/create-generated-output.dto';
+import { GeneratedOutput } from 'src/common/entities/generated-output.entity';
 // --- 로컬 인터페이스 정의 ---
 export interface ComfyUIRequest {
   client_id: string;
@@ -160,35 +161,39 @@ export class ComfyUIService implements OnModuleInit {
     usedParameters?: Record<string, any>,
   ) {
     const messageData = message.data;
-    if (!messageData.output?.images) return;
+    // ✨ output에 images나 gifs가 모두 없을 경우를 대비한 가드
+    if (!messageData.output?.images && !messageData.output?.gifs) return;
 
     const { prompt_id, output } = messageData;
-    const finalImages = output.images.filter((img) => img.type === 'output');
+
+    // ✨ --- 이미지와 비디오(gifs)를 모두 처리하도록 로직 확장 --- ✨
+    // 1. 이미지 결과물 목록을 가져옵니다. (없으면 빈 배열)
+    const imageOutputs =
+      output.images?.filter((img) => img.type === 'temp') || [];
+
+    // 2. 비디오 결과물 목록을 가져옵니다. (없으면 빈 배열)
+    //    'gifs' 배열에 있는 항목도 'images'와 동일한 구조를 가진다고 가정합니다.
+    const videoOutputs =
+      output.gifs?.filter((vid) => vid.type === 'temp') || [];
+
+    // 3. 두 목록을 하나로 합쳐서 처리할 파일 목록을 만듭니다.
+    const filesToProcess = [...imageOutputs, ...videoOutputs];
+
+    if (filesToProcess.length === 0) {
+      return; // 처리할 temp 파일이 없는 경우 종료
+    }
+
     console.log(
-      `[ComfyUIService] Handling execution result for prompt #${prompt_id}. Found ${finalImages.length} final images.`,
+      `[ComfyUIService] Handling execution result for prompt #${prompt_id}. Found ${filesToProcess.length} files to process.`,
     );
 
-    const uploadAndSavePromises = finalImages.map(async (imageInfo) => {
+    const uploadAndSavePromises = filesToProcess.map(async (fileInfo) => {
       try {
-        const params = new URLSearchParams({
-          filename: imageInfo.filename,
-          type: imageInfo.type,
-        });
-        if (imageInfo.subfolder)
-          params.append('subfolder', imageInfo.subfolder);
-        const fileDownloadUrl = `${this.comfyuiUrl}/view?${params.toString()}`;
+        // 다운로드, R2 업로드, DB 저장 로직은 이미지/비디오 모두 동일하게 작동합니다.
+        const fileBuffer = await this.downloadFromComfyUI(fileInfo);
 
-        console.log(
-          `[ComfyUIService] Downloading file from: ${fileDownloadUrl}`,
-        );
-        const response = await axios.get(fileDownloadUrl, {
-          responseType: 'arraybuffer',
-          headers: { Authorization: this.authHeader },
-        });
-        const fileBuffer = Buffer.from(response.data);
-
-        const r2FileName = `outputs/${userId}/${prompt_id}/${imageInfo.filename}`;
-        const contentType = getMimeType(imageInfo.filename);
+        const r2FileName = `outputs/${userId}/${prompt_id}/${fileInfo.filename}`;
+        const contentType = getMimeType(fileInfo.filename); // 파일 확장자로 MIME 타입 결정
         const uploadedFileUrl = await this.storageService.uploadFile(
           r2FileName,
           fileBuffer,
@@ -199,28 +204,27 @@ export class ComfyUIService implements OnModuleInit {
           `[ComfyUIService] Successfully uploaded to R2: ${uploadedFileUrl}`,
         );
 
-        // ✨ --- DB에 생성 결과 저장하는 로직 구현 --- ✨
         const createOutputDTO: CreateGeneratedOutputDTO = {
           r2Url: uploadedFileUrl,
-          originalFilename: imageInfo.filename,
+          originalFilename: fileInfo.filename,
           mimeType: contentType,
           promptId: prompt_id,
           ownerUserId: userId,
           sourceWorkflowId: templateId,
-          usedParameters: usedParameters, // 사용된 파라미터 함께 저장
+          usedParameters: usedParameters,
         };
         return await this.generatedOutputService.create(createOutputDTO);
       } catch (error) {
         console.error(
-          `[ComfyUIService] Failed to process and upload image ${imageInfo.filename} for prompt #${prompt_id}:`,
+          `[ComfyUIService] Failed to process and upload file ${fileInfo.filename} for prompt #${prompt_id}:`,
           error.message,
         );
-        return null; // 실패 시 null 반환
+        return null;
       }
     });
 
     const successfulOutputs = (await Promise.all(uploadAndSavePromises)).filter(
-      (output) => !!output,
+      (output): output is GeneratedOutput => !!output,
     );
 
     if (successfulOutputs.length > 0) {
@@ -236,6 +240,7 @@ export class ComfyUIService implements OnModuleInit {
             id: output.id,
             viewUrl: viewUrl,
             originalFilename: output.originalFilename,
+            mimeType: output.mimeType,
             createdAt: output.createdAt.toISOString(),
             usedParameters: output.usedParameters,
           };
@@ -255,6 +260,27 @@ export class ComfyUIService implements OnModuleInit {
         `[ComfyUIService] Emitting 'generation_result' for prompt #${prompt_id}`,
       );
     }
+  }
+
+  private async downloadFromComfyUI(fileInfo: {
+    filename: string;
+    subfolder?: string;
+    type: string;
+  }): Promise<Buffer> {
+    const params = new URLSearchParams({
+      filename: fileInfo.filename,
+      type: fileInfo.type,
+    });
+    if (fileInfo.subfolder) {
+      params.append('subfolder', fileInfo.subfolder);
+    }
+    const fileDownloadUrl = `${this.comfyuiUrl}/view?${params.toString()}`;
+
+    const response = await axios.get(fileDownloadUrl, {
+      responseType: 'arraybuffer',
+      headers: { Authorization: this.authHeader },
+    });
+    return Buffer.from(response.data);
   }
 
   private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
