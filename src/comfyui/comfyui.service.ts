@@ -240,6 +240,7 @@ export class ComfyUIService implements OnModuleInit {
             id: output.id,
             viewUrl: viewUrl,
             originalFilename: output.originalFilename,
+            mimeType: output.mimeType,
             createdAt: output.createdAt.toISOString(),
             usedParameters: output.usedParameters,
           };
