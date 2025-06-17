@@ -66,9 +66,11 @@ export class ComfyUIService implements OnModuleInit {
     const password = this.configService.get<string>('NGINX_PASSWORD');
 
     this.client_id = uuidv4();
-    this.comfyuiUrl = `https://${comfyuiHost}`;
-    const wsProtocol = this.comfyuiUrl.startsWith('https') ? 'wss' : 'ws';
-    this.comfyuiWsUrl = `${wsProtocol}://${comfyuiHost}/ws?clientId=${this.client_id}`;
+
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+
+    this.comfyuiUrl = `${protocol}://${comfyuiHost}`;
+    this.comfyuiWsUrl = `https://${comfyuiHost}/ws?clientId=${this.client_id}`;
     this.authHeader =
       'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
   }
