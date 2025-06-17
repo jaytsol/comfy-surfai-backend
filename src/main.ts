@@ -8,33 +8,10 @@ import passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from '@nestjs/platform-ws';
-import * as fs from 'fs'; // 파일 시스템 모듈 임포트
-import * as path from 'path'; // 경로 모듈 임포트
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 
 async function bootstrap() {
-  let httpsOptions: any;
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      httpsOptions = {
-        key: fs.readFileSync(
-          path.join(__dirname, '../..', 'certs', 'localhost+2-key.pem'),
-        ),
-        cert: fs.readFileSync(
-          path.join(__dirname, '../..', 'certs', 'localhost+2.pem'),
-        ),
-      };
-    } catch (e) {
-      console.error(
-        'Failed to read SSL certificates for HTTPS. Running on HTTP.',
-        e,
-      );
-    }
-  }
-
-  const app = await NestFactory.create(AppModule, {
-    ...(httpsOptions && { httpsOptions }),
-  });
+  const app = await NestFactory.create(AppModule);
 
   app.useWebSocketAdapter(new WsAdapter(app));
 
@@ -50,7 +27,7 @@ async function bootstrap() {
 
   // CORS 설정 추가
   app.enableCors({
-    origin: 'https://localhost:4000',
+    origin: 'http://localhost:4000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -70,7 +47,7 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 1000 * 60 * 60 * 24, // 1 day
         httpOnly: true,
         sameSite: 'lax',
