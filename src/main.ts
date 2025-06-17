@@ -13,17 +13,27 @@ import * as path from 'path'; // 경로 모듈 임포트
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 
 async function bootstrap() {
-  const httpsOptions = {
-    key: fs.readFileSync(
-      path.join(__dirname, '../..', 'certs', 'localhost+2-key.pem'),
-    ),
-    cert: fs.readFileSync(
-      path.join(__dirname, '../..', 'certs', 'localhost+2.pem'),
-    ),
-  };
+  let httpsOptions: any;
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      httpsOptions = {
+        key: fs.readFileSync(
+          path.join(__dirname, '../..', 'certs', 'localhost+2-key.pem'),
+        ),
+        cert: fs.readFileSync(
+          path.join(__dirname, '../..', 'certs', 'localhost+2.pem'),
+        ),
+      };
+    } catch (e) {
+      console.error(
+        'Failed to read SSL certificates for HTTPS. Running on HTTP.',
+        e,
+      );
+    }
+  }
 
   const app = await NestFactory.create(AppModule, {
-    httpsOptions,
+    ...(httpsOptions && { httpsOptions }),
   });
 
   app.useWebSocketAdapter(new WsAdapter(app));
@@ -90,11 +100,13 @@ async function bootstrap() {
 
   app.use(passport.initialize());
   app.use(passport.session());
+  const port = configService.get<number>('PORT') || 3000;
 
-  await app.listen(configService.get<number>('PORT') ?? 3000);
+  await app.listen(port);
+
   console.log(`Application is running on: ${await app.getUrl()}`);
-  console.log(
-    `WebSocket (WSS) is running on: wss://localhost:${configService.get<number>('PORT') ?? 3000}`,
-  );
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`WebSocket (WSS) is running on: wss://localhost:${port}`);
+  }
 }
 bootstrap();

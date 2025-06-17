@@ -11,7 +11,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { GeneratedOutputService } from './generated-output.service';
-import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
+import { AuthenticatedGuard } from '../common/guards/authenticated.guard';
 import {
   ApiTags,
   ApiCookieAuth,
@@ -148,6 +148,7 @@ export class GeneratedOutputController {
     dto.sourceWorkflowId = output.sourceWorkflowId;
     dto.usedParameters = output.usedParameters;
     dto.createdAt = output.createdAt;
+    dto.promptId = output.promptId;
     return dto;
   }
 }
