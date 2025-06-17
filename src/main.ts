@@ -27,7 +27,7 @@ async function bootstrap() {
 
   // CORS 설정 추가
   app.enableCors({
-    origin: 'http://localhost:4000',
+    origin: configService.get<string>('FRONTEND_URL'),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -81,9 +81,10 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  console.log(`Application is running on: ${await app.getUrl()}`);
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`WebSocket (WSS) is running on: wss://localhost:${port}`);
-  }
+  const appUrl = await app.getUrl();
+  const wsUrl = appUrl.replace(/^http/, 'ws');
+
+  console.log(`Application is running on: ${appUrl}`);
+  console.log(`WebSocket (WSS) is running on: ${wsUrl}`);
 }
 bootstrap();
