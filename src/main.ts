@@ -27,21 +27,16 @@ async function bootstrap() {
     }),
   );
 
-  const frontendUrlString = configService.get<string>('FRONTEND_URL');
-  const sessionSecret = configService.get<string>('SESSION_SECRET');
-
-  if (!sessionSecret) {
-    throw new Error('SESSION_SECRET is not defined in the configuration');
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  if (!frontendUrl) {
+    console.warn('FRONTEND_URL is not set. CORS will be disabled.');
   }
 
   // CORS 설정 추가
   app.enableCors({
     origin: (origin, callback) => {
       // Postman 같은 서버 간 요청(origin이 없는 경우)이나, 허용된 origin 목록에 있는 경우 통과
-      if (
-        !origin ||
-        (frontendUrlString && frontendUrlString.includes(origin))
-      ) {
+      if (!origin || (frontendUrl && frontendUrl.includes(origin))) {
         callback(null, true);
       } else {
         // 허용되지 않은 origin의 경우 에러 발생
@@ -60,46 +55,22 @@ async function bootstrap() {
     createTableIfMissing: true,
   });
 
-  const cookieConfig: session.CookieOptions = {
-    secure: isProduction,
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
-    httpOnly: true,
-  };
-
-  if (isProduction) {
-    // 운영 환경에서는 SameSite와 Domain을 명시적으로 설정합니다.
-    cookieConfig.sameSite = 'none';
-
-    if (frontendUrlString) {
-      // 'https://' 프로토콜 부분을 제외한 순수 호스트 이름만 추출합니다.
-      const frontendHost = new URL(frontendUrlString).hostname;
-
-      // 최상위 도메인(eTLD+1)을 동적으로 계산합니다. (예: 'run.app')
-      // 이렇게 하면 'surfai-frontend...run.app'와 'surfai-backend...run.app'이
-      // 같은 사이트로 인식될 가능성이 높아집니다.
-      const domainParts = frontendHost.split('.');
-      const topLevelDomain = domainParts.slice(-2).join('.'); // 예: 'run.app'
-
-      cookieConfig.domain = topLevelDomain;
-
-      console.log(`Production cookie domain set to: .${topLevelDomain}`);
-    } else {
-      console.error(
-        'FATAL: FRONTEND_URL is not set in production environment!',
-      );
-    }
-  } else {
-    // 개발 환경에서는 'lax'가 더 간단하고 잘 동작합니다.
-    cookieConfig.sameSite = 'lax';
-  }
-
   app.use(
     session({
       store: sessionStore,
-      secret: sessionSecret,
+      secret: configService.get<string>('SESSION_SECRET') as any,
       resave: false,
       saveUninitialized: false,
-      cookie: cookieConfig, // ✨ 수정된 쿠키 설정을 적용
+      cookie: {
+        secure: isProduction,
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+        httpOnly: true,
+        sameSite: 'none',
+        domain:
+          isProduction && frontendUrl
+            ? `.${new URL(frontendUrl).hostname.split('.').slice(-3).join('.')}`
+            : 'localhost',
+      },
     }),
   );
 
