@@ -47,10 +47,14 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production', // production에서는 true
         maxAge: 1000 * 60 * 60 * 24, // 1 day
         httpOnly: true,
-        sameSite: 'none',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        domain:
+          process.env.NODE_ENV === 'production'
+            ? '.surfai-frontend-781704308120.asia-northeast3.run.app'
+            : undefined,
       },
     }),
   );
