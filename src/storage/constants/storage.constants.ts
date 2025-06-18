@@ -13,14 +13,11 @@ export const storageConfig = registerAs(STORAGE_CONFIG, () => ({
   },
 }));
 
-const isProduction = process.env.NODE_ENV === 'production';
-const protocol = isProduction ? 'https' : 'http';
-
 export const R2_CONFIG = {
   REGION: 'auto',
   // 운영 환경에서는 https, 개발 환경에서는 http를 사용하도록 수정
   ENDPOINT: (accountId: string): string =>
-    `${protocol}://${accountId}.r2.cloudflarestorage.com`,
+    `https://${accountId}.r2.cloudflarestorage.com`,
   PUBLIC_URL: (bucketName: string, accountId: string): string =>
-    `${protocol}://${bucketName}.${accountId}.r2.cloudflarestorage.com`,
+    `https://${bucketName}.${accountId}.r2.cloudflarestorage.com`,
 } as const;

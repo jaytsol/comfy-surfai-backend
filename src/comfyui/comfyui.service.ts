@@ -67,10 +67,8 @@ export class ComfyUIService implements OnModuleInit {
 
     this.client_id = uuidv4();
 
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-
-    this.comfyuiUrl = `${protocol}://${comfyuiHost}`;
-    this.comfyuiWsUrl = `https://${comfyuiHost}/ws?clientId=${this.client_id}`;
+    this.comfyuiUrl = `https://${comfyuiHost}`;
+    this.comfyuiWsUrl = `wss://${comfyuiHost}/ws?clientId=${this.client_id}`;
     this.authHeader =
       'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
   }
