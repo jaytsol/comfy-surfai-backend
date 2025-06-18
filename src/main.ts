@@ -17,6 +17,18 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  const isProduction = process.env.NODE_ENV === 'production';
+  const frontendUrlString = configService.get<string>('FRONTEND_URL');
+  if (!frontendUrlString) {
+    // FRONTEND_URL이 설정되지 않았을 경우, 특히 운영 환경에서는 에러를 발생시키는 것이 안전합니다.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'FATAL ERROR: FRONTEND_URL environment variable is not set.',
+      );
+    }
+    console.warn('FRONTEND_URL is not set. CORS will not be configured.');
+  }
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -47,10 +59,14 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         maxAge: 1000 * 60 * 60 * 24, // 1 day
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
+        domain:
+          isProduction && frontendUrlString
+            ? `.${new URL(frontendUrlString).hostname.split('.').slice(-3).join('.')}`
+            : 'localhost',
       },
     }),
   );
