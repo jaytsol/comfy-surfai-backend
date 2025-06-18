@@ -17,6 +17,8 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,9 +27,22 @@ async function bootstrap() {
     }),
   );
 
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  if (!frontendUrl) {
+    console.warn('FRONTEND_URL is not set. CORS will be disabled.');
+  }
+
   // CORS 설정 추가
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL'),
+    origin: (origin, callback) => {
+      // Postman 같은 서버 간 요청(origin이 없는 경우)이나, 허용된 origin 목록에 있는 경우 통과
+      if (!origin || (frontendUrl && frontendUrl.includes(origin))) {
+        callback(null, true);
+      } else {
+        // 허용되지 않은 origin의 경우 에러 발생
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -47,10 +62,14 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         maxAge: 1000 * 60 * 60 * 24, // 1 day
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
+        domain:
+          isProduction && frontendUrl
+            ? `.${new URL(frontendUrl).hostname.split('.').slice(-3).join('.')}`
+            : 'localhost',
       },
     }),
   );
