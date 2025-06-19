@@ -15,7 +15,6 @@ import {
   Delete, // req.user.id를 가져오기 위해
 } from '@nestjs/common';
 import { WorkflowService } from './workflow.service'; // 곧 생성할 서비스
-import { AuthenticatedGuard } from '../common/guards/authenticated.guard'; // 경로 확인 및 수정 필요
 import { RolesGuard } from '../common/guards/roles.guard'; // 경로 확인 및 수정 필요
 import { Roles } from '../common/decorators/roles.decorator'; // 경로 확인 및 수정 필요
 import { Role } from '../common/enums/role.enum'; // User 모듈의 Role Enum 경로 확인 및 수정 필요
@@ -33,10 +32,11 @@ import {
 } from '@nestjs/swagger';
 import { Workflow } from '../common/entities/workflow.entity'; // 실제 엔티티 경로로 수정 필요
 import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiTags('Admin - Workflow Templates') // Swagger UI 그룹핑 태그
 @ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요함을 명시
-@UseGuards(AuthenticatedGuard, RolesGuard) // 모든 라우트에 가드 적용
+@UseGuards(JwtAuthGuard, RolesGuard) // 모든 라우트에 가드 적용
 @Roles(Role.Admin) // 이 컨트롤러의 모든 라우트는 Admin 역할 필요
 @Controller('workflow-templates') // 이 컨트롤러의 기본 경로
 export class WorkflowController {

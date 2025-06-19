@@ -1,14 +1,13 @@
-// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
-import passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
+import cookieParser from 'cookie-parser';
+import csurf from 'csurf';
+import { NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,7 +16,48 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  let cookieDomain: string | undefined = undefined;
+
+  if (isProduction && frontendUrl) {
+    const frontendHost = new URL(frontendUrl).hostname;
+    const domainParts = frontendHost.split('.');
+    cookieDomain = domainParts.slice(-2).join('.'); // 예: 'run.app'
+  }
+
+  app.use(cookieParser());
+
+  const csrfProtection = csurf({
+    cookie: {
+      httpOnly: true, // CSRF 토큰 쿠키도 httpOnly로 설정하여 보안 강화
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      domain: cookieDomain,
+    },
+  });
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // '/auth/refresh' 경로의 POST 요청은 CSRF 보호를 건너뜁니다.
+    if (req.url === '/auth/refresh' && req.method === 'POST') {
+      return next();
+    }
+    // 그 외의 모든 요청에는 CSRF 보호를 적용합니다.
+    csrfProtection(req, res, next);
+  });
+
+  app.use((req: any, res, next) => {
+    // csurf가 생성한 CSRF 토큰을 'XSRF-TOKEN'이라는 이름의 새로운 쿠키에 담아 보냅니다.
+    // 이 쿠키는 httpOnly가 아니므로, 프론트엔드 JavaScript가 읽을 수 있습니다.
+    if (req.csrfToken) {
+      res.cookie('XSRF-TOKEN', req.csrfToken(), {
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        domain: cookieDomain,
+      });
+    }
+    next();
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -27,61 +67,43 @@ async function bootstrap() {
     }),
   );
 
-  const frontendUrl = configService.get<string>('FRONTEND_URL');
-  if (!frontendUrl) {
-    console.warn('FRONTEND_URL is not set. CORS will be disabled.');
+  // ✨ --- CORS 설정 추가 (필수) --- ✨
+  const allowedOrigins = [
+    'http://localhost:4000', // 로컬 프론트엔드 개발 환경
+  ];
+  const prodFrontendUrl = configService.get<string>('FRONTEND_URL');
+  if (prodFrontendUrl) {
+    allowedOrigins.push(prodFrontendUrl);
   }
+  // 백엔드 자신의 URL도 허용 목록에 추가 (Swagger UI 등에서의 테스트를 위해)
+  // getUrl()은 listen() 후에 호출해야 하므로, 여기서는 환경 변수를 사용하거나 고정값을 사용합니다.
+  const prodBackendUrl = configService.get<string>('API_BASE_URL');
+  if (prodBackendUrl) {
+    allowedOrigins.push(prodBackendUrl);
+  }
+  console.log('Allowed CORS origins:', allowedOrigins);
 
-  // CORS 설정 추가
   app.enableCors({
     origin: (origin, callback) => {
-      // Postman 같은 서버 간 요청(origin이 없는 경우)이나, 허용된 origin 목록에 있는 경우 통과
-      if (!origin || (frontendUrl && frontendUrl.includes(origin))) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        // 허용되지 않은 origin의 경우 에러 발생
+        console.error(`CORS Error: Origin ${origin} is not allowed.`);
         callback(new Error('Not allowed by CORS'));
       }
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization',
+    credentials: true, // 쿠키 또는 Authorization 헤더를 주고받기 위해 필수
   });
 
-  const PGStore = connectPgSimple(session);
-  const sessionStore = new PGStore({
-    conString: configService.get<string>('DATABASE_URL'),
-    tableName: 'sessions',
-    createTableIfMissing: true,
-  });
-
-  app.use(
-    session({
-      store: sessionStore,
-      secret: configService.get<string>('SESSION_SECRET') as any,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: isProduction,
-        maxAge: 1000 * 60 * 60 * 24, // 1 day
-        httpOnly: true,
-        sameSite: 'none',
-        domain:
-          isProduction && frontendUrl
-            ? `.${new URL(frontendUrl).hostname.split('.').slice(-3).join('.')}`
-            : 'localhost',
-      },
-    }),
-  );
-
-  // Swagger
+  // Swagger 설정
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Surfai APIs') // API 문서의 제목
+    .setTitle('Surfai APIs')
     .setDescription(
       'NestJS와 ComfyUI를 연동한 AI 이미지 및 비디오 생성 서비스 Surfai의 API 문서입니다.',
-    ) // API에 대한 설명
-    .setVersion('1.0') // API 버전
-    .addCookieAuth('connect.sid') // 세션 쿠키 인증 방식 명시 (선택 사항이지만 유용)
+    )
+    .setVersion('1.0')
+    .addBearerAuth() // ✨ JWT 인증 방식을 사용하므로 addCookieAuth 대신 addBearerAuth 사용
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig, {
@@ -90,20 +112,17 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
-      persistAuthorization: true, // 인증 상태 유지 (페이지 새로고침 시에도)
+      persistAuthorization: true,
     },
   });
 
-  app.use(passport.initialize());
-  app.use(passport.session());
-  const port = configService.get<number>('PORT') || 3000;
-
+  const port = process.env.PORT || 3000;
   await app.listen(port);
 
   const appUrl = await app.getUrl();
   const wsUrl = appUrl.replace(/^http/, 'ws');
 
   console.log(`Application is running on: ${appUrl}`);
-  console.log(`WebSocket (WSS) is running on: ${wsUrl}`);
+  console.log(`WebSocket is running on: ${wsUrl}`);
 }
 bootstrap();
