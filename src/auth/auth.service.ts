@@ -4,44 +4,85 @@ import { Repository } from 'typeorm';
 import { User } from 'src/common/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { Role } from 'src/common/enums/role.enum';
 
-interface GoogleProfile {
+interface GoogleProfilePayload {
   googleId: string;
   email: string;
   displayName: string;
-  imageUrl?: string;
+  avatarUrl?: string;
 }
 
 @Injectable()
 export class AuthService {
+  private readonly adminEmails: string[];
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly configService: ConfigService, // ✨ ConfigService 주입
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // 환경 변수에서 관리자 이메일 목록을 가져와 배열로 만듭니다.
+    const adminEmailString = this.configService.get<string>('ADMIN_EMAILS', '');
+    this.adminEmails = adminEmailString.split(',').map((email) => email.trim());
+  }
 
+  /**
+   * Google 프로필 정보로 사용자를 찾거나, 없으면 새로 생성합니다.
+   * @param profile Google로부터 받은 사용자 프로필 정보
+   * @param refreshToken (선택) Google로부터 받은 리프레시 토큰
+   * @returns 우리 시스템의 User 엔티티
+   */
   async findOrCreateGoogleUser(
-    profile: GoogleProfile,
+    profile: GoogleProfilePayload,
     refreshToken?: string,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
+    // 1. googleId를 기준으로 기존 사용자가 있는지 확인합니다.
+    let user = await this.userRepository.findOne({
       where: { googleId: profile.googleId },
     });
 
     if (user) {
-      if (refreshToken) {
-        // ✨ 리프레시 토큰이 새로 발급되었다면 DB에 업데이트
-        await this.setCurrentRefreshToken(refreshToken, user.id);
-      }
-      return user;
+      // 2. 이미 존재하는 사용자라면, 이름이나 프로필 사진이 변경되었을 수 있으니 업데이트합니다.
+      user.displayName = profile.displayName;
+      user.imageUrl = profile.avatarUrl;
+      // TODO: 리프레시 토큰이 새로 발급되었다면 DB에 업데이트하는 로직 (선택 사항)
+      // if (refreshToken) { user.currentHashedRefreshToken = await hash(refreshToken) }
+
+      console.log(`[AuthService] Found existing user: ${user.email}`);
+      return this.userRepository.save(user);
     }
 
+    // 3. 존재하지 않는 사용자라면, 이메일을 기준으로 다시 한번 확인합니다.
+    // (예: 이전에 이메일/비밀번호로 가입했다가, 나중에 Google로 로그인하는 경우)
+    user = await this.userRepository.findOne({
+      where: { email: profile.email },
+    });
+
+    if (user) {
+      // 4. 이메일이 같은 사용자가 있다면, 해당 계정에 googleId를 연결해줍니다.
+      user.googleId = profile.googleId;
+      user.imageUrl = user.imageUrl || profile.avatarUrl; // 기존 프로필 사진이 없으면 구글 것으로 설정
+      // ...
+      console.log(
+        `[AuthService] Linking Google account to existing user: ${user.email}`,
+      );
+      return this.userRepository.save(user);
+    }
+
+    // 5. 완전히 새로운 사용자라면, 새로 생성합니다.
     const newUser = this.userRepository.create({
       googleId: profile.googleId,
       email: profile.email,
-      displayName: profile.displayName || profile.email,
-      imageUrl: profile.imageUrl,
+      displayName: profile.displayName || profile.email, // 이름이 없는 경우 이메일을 이름으로 사용
+      imageUrl: profile.avatarUrl,
+      // ✨ 관리자 이메일 목록에 포함되어 있는지 확인하여 역할(role) 부여
+      role: this.adminEmails.includes(profile.email) ? Role.Admin : Role.User,
     });
+
+    console.log(
+      `[AuthService] Creating new user: ${newUser.email} with role: ${newUser.role}`,
+    );
 
     const savedUser = await this.userRepository.save(newUser);
 
