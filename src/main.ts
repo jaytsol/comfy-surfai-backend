@@ -7,6 +7,7 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
+import { NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -35,7 +36,15 @@ async function bootstrap() {
       domain: cookieDomain,
     },
   });
-  app.use(csrfProtection);
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // '/auth/refresh' 경로의 POST 요청은 CSRF 보호를 건너뜁니다.
+    if (req.url === '/auth/refresh' && req.method === 'POST') {
+      return next();
+    }
+    // 그 외의 모든 요청에는 CSRF 보호를 적용합니다.
+    csrfProtection(req, res, next);
+  });
 
   app.use((req: any, res, next) => {
     // csurf가 생성한 CSRF 토큰을 'XSRF-TOKEN'이라는 이름의 새로운 쿠키에 담아 보냅니다.
