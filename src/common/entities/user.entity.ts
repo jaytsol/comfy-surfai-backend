@@ -31,8 +31,8 @@ export class User {
   @Column({ nullable: true, length: 2048 })
   imageUrl?: string;
 
-  @Column({ nullable: true, select: false }) // select: false로 기본 조회 시에는 제외
-  currentHashedRefreshToken?: string;
+  @Column({ type: 'varchar', nullable: true, select: false })
+  currentHashedRefreshToken?: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

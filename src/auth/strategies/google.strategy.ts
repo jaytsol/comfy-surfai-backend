@@ -40,10 +40,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     };
 
     // DB에서 이 Google 유저를 찾거나, 없으면 새로 생성
-    const user = await this.authService.findOrCreateGoogleUser(
-      googleUser,
-      refreshToken,
-    );
+    const user = await this.authService.findOrCreateGoogleUser(googleUser);
 
     const payload = {
       user,
