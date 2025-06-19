@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt'; // ✨ JWT 모듈 임포트
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy'; // ✨ 새로 만들 JwtStrategy
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy'; // ✨ 새로 만들 JwtRefreshStrategy
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { JwtStrategy } from './strategies/jwt.strategy'; // ✨ 새로 만들 Jw
   ],
   controllers: [AuthController],
   // ✨ GoogleStrategy와 함께 JwtStrategy를 providers에 추가
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy, JwtRefreshStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -22,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { LoginResponseDTO } from '../common/dto/login-response.dto'; // ✨ DTO 임포트
 import { UserResponseDTO } from '../common/dto/user.response.dto'; // ✨ DTO 임포트
+import { JwtRefreshGuard } from 'src/common/guards/jwt-refresh.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -111,6 +112,15 @@ export class AuthController {
     // req.user에는 JwtStrategy의 validate에서 반환한 { id, email, role }이 담겨있습니다.
     // 실제로는 user 전체 객체를 반환하도록 auth.service.ts의 login 로직을 수정하는 것이 좋습니다.
     return req.user as UserResponseDTO;
+  }
+
+  @Post('refresh')
+  @UseGuards(JwtRefreshGuard) // ✨ Refresh Token을 검증하는 가드 사용
+  @ApiOperation({ summary: 'Access Token 재발급' })
+  async refreshTokens(@Req() req: any) {
+    const userId = req.user.id;
+    // 여기서는 Refresh Token 자체가 아니라, req.user에 담긴 사용자 정보로 새로운 토큰들을 발급합니다.
+    return this.authService.refreshTokens(userId);
   }
 
   @Post('logout')

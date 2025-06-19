@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/common/entities/user.entity';
@@ -94,6 +94,19 @@ export class AuthService {
       role: this.adminEmails.includes(profile.email) ? Role.Admin : Role.User,
     });
     return this.userRepository.save(newUser);
+  }
+
+  /**
+   * 새로운 Access Token과 Refresh Token을 발급합니다.
+   * @param userId 토큰을 발급할 사용자의 ID
+   */
+  async refreshTokens(userId: number) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    // ✨ login 메소드를 재사용하여 새로운 토큰들을 생성하고 DB에 저장합니다.
+    const tokens = await this.handleGoogleLogin(user);
+    return tokens;
   }
 
   /**
