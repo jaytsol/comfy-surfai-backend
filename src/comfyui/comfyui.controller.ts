@@ -9,7 +9,6 @@ import {
   Request,
 } from '@nestjs/common';
 import { ComfyUIService as ComfyUIService } from 'src/comfyui/comfyui.service';
-import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -20,6 +19,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiCookieAuth() // 이 컨트롤러의 모든 API가 쿠키 인증을 필요로 함을 명시 (또는 각 메소드에 개별 적용)
 @Controller('api')
@@ -28,7 +28,7 @@ export class ComfyUIController {
 
   @Post('generate')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   @ApiOperation({
     summary: '워크플로우 템플릿과 파라미터를 사용하여 이미지 생성 (Admin 전용)',

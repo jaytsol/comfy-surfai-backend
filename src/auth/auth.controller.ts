@@ -62,11 +62,36 @@ export class AuthController {
   async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
     const { accessToken, refreshToken } =
       await this.authService.handleGoogleLogin(req.user);
-    // 참고: 실제 응답은 리디렉션이지만, Swagger에서는 이 정보를 직접 테스트하기 어렵습니다.
-    // 프론트엔드 URL에 토큰을 담아 보내는 것을 문서에 명시하는 것이 중요합니다.
-    res.redirect(
-      `${this.frontendUrl}/auth/callback?access_token=${accessToken}&refresh_token=${refreshToken}`,
-    );
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // ✨ --- 쿠키 도메인 설정 로직 --- ✨
+    let cookieDomain: string | undefined = undefined;
+    if (isProduction) {
+      // 운영 환경에서는 프론트엔드 URL에서 공통 상위 도메인을 추출합니다.
+      // 예: 'surfai-frontend-....run.app' -> 'run.app'
+      const frontendHost = new URL(this.frontendUrl).hostname;
+      const domainParts = frontendHost.split('.');
+      // .slice(-2)는 마지막 두 부분(예: 'run', 'app')을 선택합니다.
+      cookieDomain = domainParts.slice(-2).join('.');
+    }
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 15, // 15분
+      domain: cookieDomain,
+    });
+
+    // ✨ 3. Refresh Token도 별도의 HttpOnly 쿠키로 설정합니다.
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
+      domain: cookieDomain,
+    });
+    res.redirect(`${this.frontendUrl}/history`);
   }
 
   @Get('profile')

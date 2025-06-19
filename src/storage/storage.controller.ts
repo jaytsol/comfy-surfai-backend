@@ -24,16 +24,16 @@ import {
 } from '@nestjs/swagger';
 import { BadRequestException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { AuthenticatedGuard } from 'src/common/guards/authenticated.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import * as path from 'path';
 import { getMimeType } from 'src/common/utils/mime-type.util';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiTags('Admin - Storage Management')
 @ApiCookieAuth()
-@UseGuards(AuthenticatedGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.Admin)
 @Controller('storage')
 export class StorageController {

@@ -11,7 +11,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { GeneratedOutputService } from './generated-output.service';
-import { AuthenticatedGuard } from '../common/guards/authenticated.guard';
 import {
   ApiTags,
   ApiCookieAuth,
@@ -21,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { GeneratedOutputResponseDTO } from '../common/dto/generated-output/generated-output.response.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 // --- API 응답을 위한 페이지네이션 타입 정의 (공통 타입으로 분리해도 좋습니다) ---
 class PaginatedHistoryResponse {
@@ -43,7 +43,7 @@ class PaginatedHistoryResponse {
 
 @ApiTags('My Outputs')
 @ApiCookieAuth() // 이 컨트롤러의 모든 API는 쿠키 인증 필요
-@UseGuards(AuthenticatedGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('my-outputs') // 엔드포인트 기본 경로
 export class GeneratedOutputController {
   constructor(
