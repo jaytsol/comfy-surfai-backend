@@ -6,15 +6,49 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 import cookieParser from 'cookie-parser';
+import csurf from 'csurf';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useWebSocketAdapter(new WsAdapter(app));
 
+  const configService = app.get(ConfigService);
+
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  let cookieDomain: string | undefined = undefined;
+
+  if (isProduction && frontendUrl) {
+    const frontendHost = new URL(frontendUrl).hostname;
+    const domainParts = frontendHost.split('.');
+    cookieDomain = domainParts.slice(-2).join('.'); // 예: 'run.app'
+  }
+
   app.use(cookieParser());
 
-  const configService = app.get(ConfigService);
+  const csrfProtection = csurf({
+    cookie: {
+      httpOnly: true, // CSRF 토큰 쿠키도 httpOnly로 설정하여 보안 강화
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      domain: cookieDomain,
+    },
+  });
+  app.use(csrfProtection);
+
+  app.use((req: any, res, next) => {
+    // csurf가 생성한 CSRF 토큰을 'XSRF-TOKEN'이라는 이름의 새로운 쿠키에 담아 보냅니다.
+    // 이 쿠키는 httpOnly가 아니므로, 프론트엔드 JavaScript가 읽을 수 있습니다.
+    if (req.csrfToken) {
+      res.cookie('XSRF-TOKEN', req.csrfToken(), {
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        domain: cookieDomain,
+      });
+    }
+    next();
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
