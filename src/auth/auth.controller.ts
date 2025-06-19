@@ -46,6 +46,7 @@ export class AuthController {
     status: 302,
     description: 'Google 인증 페이지로 리디렉션됩니다.',
   })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async googleAuth(@Req() req: Request) {}
 
   @Get('google/callback')
