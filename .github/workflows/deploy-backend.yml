@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+# TODO: remove this comment
 jobs:
   deploy:
     runs-on: ubuntu-latest
