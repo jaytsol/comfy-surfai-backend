@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-
+# TODO: remove this comment
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -26,9 +26,6 @@ jobs:
       - name: Setup gcloud CLI
         uses: 'google-github-actions/setup-gcloud@v2'
 
-      - name: Set GCloud project
-        run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-      
       - name: Build and Push Docker image
         run: |-
           gcloud builds submit --tag "gcr.io/${{ secrets.GCP_PROJECT_ID }}/surfai-backend:latest"
@@ -38,4 +35,5 @@ jobs:
           gcloud run deploy surfai-backend \
             --image "gcr.io/${{ secrets.GCP_PROJECT_ID }}/surfai-backend:latest" \
             --platform managed \
-            --region asia-northeast1
+            --region asia-northeast1 \
+            --project ${{ secrets.GCP_PROJECT_ID }}
