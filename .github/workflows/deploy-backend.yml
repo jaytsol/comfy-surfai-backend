@@ -3,20 +3,21 @@ name: Deploy Backend to Google Cloud Run
 on:
   push:
     branches:
-      - master # master 브랜치에 푸시될 때마다 이 워크플로우를 실행합니다.
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
-      id-token: 'write' # Google Cloud 인증에 필요
+      id-token: 'write'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
+        id: auth
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
