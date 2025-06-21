@@ -1,0 +1,38 @@
+name: Deploy Backend to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - master # master 브랜치에 푸시될 때마다 이 워크플로우를 실행합니다.
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # Google Cloud 인증에 필요
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: 'github-actions-deployer@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Setup gcloud CLI
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: Build and Push Docker image
+        run: |-
+          gcloud builds submit --tag "gcr.io/${{ secrets.GCP_PROJECT_ID }}/surfai-backend:latest"
+
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy surfai-backend \
+            --image "gcr.io/${{ secrets.GCP_PROJECT_ID }}/surfai-backend:latest" \
+            --platform managed \
+            --region asia-northeast1 \
+            --project ${{ secrets.GCP_PROJECT_ID }}

@@ -17,20 +17,20 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const isProduction = configService.get<string>('NODE_ENV') === 'production';
-  const frontendUrl = configService.get<string>('FRONTEND_URL');
   let cookieDomain: string | undefined = undefined;
 
-  if (isProduction && frontendUrl) {
-    const frontendHost = new URL(frontendUrl).hostname;
-    const domainParts = frontendHost.split('.');
-    cookieDomain = domainParts.slice(-2).join('.'); // 예: 'run.app'
+  if (isProduction) {
+    const rootDomain = configService.get<string>('ROOT_DOMAIN');
+    if (rootDomain && rootDomain !== 'localhost') {
+      cookieDomain = `.${rootDomain}`;
+    }
   }
 
   app.use(cookieParser());
 
   const csrfProtection = csurf({
     cookie: {
-      httpOnly: true, // CSRF 토큰 쿠키도 httpOnly로 설정하여 보안 강화
+      httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
       domain: cookieDomain,
@@ -47,8 +47,6 @@ async function bootstrap() {
   });
 
   app.use((req: any, res, next) => {
-    // csurf가 생성한 CSRF 토큰을 'XSRF-TOKEN'이라는 이름의 새로운 쿠키에 담아 보냅니다.
-    // 이 쿠키는 httpOnly가 아니므로, 프론트엔드 JavaScript가 읽을 수 있습니다.
     if (req.csrfToken) {
       res.cookie('XSRF-TOKEN', req.csrfToken(), {
         secure: isProduction,
@@ -69,18 +67,9 @@ async function bootstrap() {
 
   // ✨ --- CORS 설정 추가 (필수) --- ✨
   const allowedOrigins = [
-    'http://localhost:4000', // 로컬 프론트엔드 개발 환경
+    `http://localhost:4000`,
+    `https://${configService.get<string>('ROOT_DOMAIN')}`,
   ];
-  const prodFrontendUrl = configService.get<string>('FRONTEND_URL');
-  if (prodFrontendUrl) {
-    allowedOrigins.push(prodFrontendUrl);
-  }
-  // 백엔드 자신의 URL도 허용 목록에 추가 (Swagger UI 등에서의 테스트를 위해)
-  // getUrl()은 listen() 후에 호출해야 하므로, 여기서는 환경 변수를 사용하거나 고정값을 사용합니다.
-  const prodBackendUrl = configService.get<string>('API_BASE_URL');
-  if (prodBackendUrl) {
-    allowedOrigins.push(prodBackendUrl);
-  }
   console.log('Allowed CORS origins:', allowedOrigins);
 
   app.enableCors({
@@ -93,7 +82,7 @@ async function bootstrap() {
       }
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // 쿠키 또는 Authorization 헤더를 주고받기 위해 필수
+    credentials: true,
   });
 
   // Swagger 설정
