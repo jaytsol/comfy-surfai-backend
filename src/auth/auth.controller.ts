@@ -148,8 +148,26 @@ export class AuthController {
     const userId = req.user.id;
     await this.authService.removeRefreshToken(userId);
 
-    // ✨ 로그아웃 시 쿠키를 삭제합니다.
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    // ✨ --- 로그아웃 시 쿠키 삭제 로직 수정 --- ✨
+    const isProduction = process.env.NODE_ENV === 'production';
+    let cookieDomain: string | undefined = undefined;
+    if (isProduction) {
+      const frontendHost = new URL(this.frontendUrl).hostname;
+      const domainParts = frontendHost.split('.');
+      cookieDomain = domainParts.slice(-2).join('.');
+    }
+
+    // 쿠키를 생성했을 때와 동일한 옵션을 전달하여 삭제합니다.
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      domain: cookieDomain,
+      path: '/', // ✨ 경로도 명시해주는 것이 더 안전합니다.
+    };
+
+    res.clearCookie('access_token', cookieOptions);
+    res.clearCookie('refresh_token', cookieOptions);
   }
 }
