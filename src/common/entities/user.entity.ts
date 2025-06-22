@@ -12,6 +12,9 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true, select: false })
+  password?: string;
+
   @Column({
     type: 'enum',
     enum: Role,
@@ -25,8 +28,8 @@ export class User {
   @Column()
   displayName: string;
 
-  @Column({ unique: true })
-  googleId: string;
+  @Column({ unique: true, nullable: true })
+  googleId?: string;
 
   @Column({ nullable: true, length: 2048 })
   imageUrl?: string;
