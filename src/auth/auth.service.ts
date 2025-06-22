@@ -13,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from 'src/common/dto/create-user.dto';
 
 interface GoogleProfilePayload {
-  googleId: string;
+  googleId?: string;
   email: string;
   displayName: string;
   avatarUrl?: string;
