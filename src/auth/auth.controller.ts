@@ -73,6 +73,7 @@ export class AuthController {
     const user = await this.authService.register(createUserDto);
     // 회원가입 성공 시, 바로 로그인 처리(토큰 발급)도 가능하지만,
     // 여기서는 간단하게 생성된 user 정보만 반환
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
     return result;
   }

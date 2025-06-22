@@ -34,6 +34,36 @@ export class AuthService {
   }
 
   /**
+   * 인증이 완료된 사용자를 받아, Access/Refresh Token을 생성하고 DB에 저장합니다.
+   * 이 메소드는 LocalStrategy와 GoogleStrategy 모두에서 사용됩니다.
+   * @param user 인증된 User 엔티티
+   * @returns { accessToken: string, refreshToken: string, user: User }
+   */
+  async login(
+    user: User,
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    const payload = { email: user.email, sub: user.id, role: user.role };
+
+    // Access Token 생성 (기본 유효기간 적용, 예: 15분)
+    const accessToken = this.jwtService.sign(payload);
+
+    // Refresh Token 생성 (더 긴 유효기간 적용)
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION_TIME'), // 예: '7d'
+    });
+
+    // 생성된 Refresh Token을 해싱하여 DB에 저장
+    await this.setCurrentRefreshToken(refreshToken, user.id);
+
+    return {
+      accessToken,
+      refreshToken,
+      user,
+    };
+  }
+
+  /**
    * (신규) 일반 회원가입
    */
   async register(createUserInput: CreateUserDto): Promise<User> {
