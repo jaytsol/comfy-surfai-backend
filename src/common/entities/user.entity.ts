@@ -12,6 +12,9 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true, select: false })
+  password?: string;
+
   @Column({
     type: 'enum',
     enum: Role,

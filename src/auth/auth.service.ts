@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/common/entities/user.entity';
@@ -6,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { Role } from 'src/common/enums/role.enum';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from 'src/common/dto/create-user.dto';
 
 interface GoogleProfilePayload {
   googleId: string;
@@ -26,6 +31,60 @@ export class AuthService {
   ) {
     const adminEmailString = this.configService.get<string>('ADMIN_EMAILS', '');
     this.adminEmails = adminEmailString.split(',').map((email) => email.trim());
+  }
+
+  /**
+   * (신규) 일반 회원가입
+   */
+  async register(createUserInput: CreateUserDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserInput.email },
+    });
+    if (existingUser) {
+      throw new ConflictException('이미 사용 중인 이메일입니다.');
+    }
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(
+      createUserInput.password,
+      saltRounds,
+    );
+
+    const newUser = this.userRepository.create({
+      ...createUserInput,
+      password: hashedPassword,
+      role: this.adminEmails.includes(createUserInput.email)
+        ? Role.Admin
+        : Role.User,
+    });
+    return this.userRepository.save(newUser);
+  }
+
+  /**
+   * (신규) 이메일/비밀번호 사용자 검증
+   */
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<Omit<User, 'password'> | null> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'password', 'role', 'displayName'], // password를 명시적으로 포함
+    });
+    if (user) {
+      // ✨ 1. 비밀번호 비교 결과를 별도의 변수에 먼저 할당합니다.
+      const isPasswordMatching = await bcrypt.compare(password, user.password);
+
+      // ✨ 2. if 문에서는 이 변수를 사용하여 조건을 확인합니다.
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      if (isPasswordMatching) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...result } = user;
+        return result;
+      }
+    }
+
+    // 유저가 없거나, 비밀번호가 일치하지 않으면 null 반환
+    return null;
   }
 
   /**

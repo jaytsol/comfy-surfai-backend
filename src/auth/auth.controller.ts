@@ -7,6 +7,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Body,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from '../common/guards/google-auth.guard';
@@ -16,6 +17,8 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { UserResponseDTO } from '../common/dto/user.response.dto';
 import { JwtRefreshGuard } from 'src/common/guards/jwt-refresh.guard';
+import { LocalAuthGuard } from 'src/common/guards/local-auth.guard';
+import { CreateUserDto } from 'src/common/dto/create-user.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -62,6 +65,31 @@ export class AuthController {
     });
   }
   // --- 헬퍼 메소드 끝 ---
+
+  // ✨ --- 일반 회원가입 API --- ✨
+  @Post('register')
+  @ApiOperation({ summary: '일반 회원가입' })
+  async register(@Body() createUserDto: CreateUserDto) {
+    const user = await this.authService.register(createUserDto);
+    // 회원가입 성공 시, 바로 로그인 처리(토큰 발급)도 가능하지만,
+    // 여기서는 간단하게 생성된 user 정보만 반환
+    const { password, ...result } = user;
+    return result;
+  }
+
+  // ✨ --- 일반 로그인 API --- ✨
+  @Post('login')
+  @UseGuards(LocalAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '일반 로그인' })
+  async login(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+    // LocalAuthGuard가 성공적으로 통과하면 req.user에 사용자 정보가 담겨있음
+    const { accessToken, refreshToken } = await this.authService.login(
+      req.user,
+    );
+    this.setTokenCookies(res, accessToken, refreshToken);
+    return { user: req.user, accessToken };
+  }
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
