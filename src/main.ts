@@ -7,7 +7,7 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import { WorkflowParameterMappingItemDTO } from './common/dto/workflow/workflow-parameter-mapping-item.dto';
 import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,61 +15,18 @@ async function bootstrap() {
   app.useWebSocketAdapter(new WsAdapter(app));
 
   const configService = app.get(ConfigService);
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  const isProduction = configService.get<string>('NODE_ENV') === 'production';
-  let cookieDomain: string | undefined = undefined;
-
-  if (isProduction) {
-    const rootDomain = configService.get<string>('ROOT_DOMAIN');
-    if (rootDomain && rootDomain !== 'localhost') {
-      cookieDomain = `.${rootDomain}`;
-    }
+  // --- CORS 설정 ---
+  const allowedOrigins = ['http://localhost:4000'];
+  const prodFrontendUrl = configService.get<string>('FRONTEND_URL');
+  if (prodFrontendUrl) {
+    allowedOrigins.push(prodFrontendUrl);
   }
-
-  app.use(cookieParser());
-
-  const csrfProtection = csurf({
-    cookie: {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      domain: cookieDomain,
-    },
-  });
-
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    // '/auth/refresh' 경로의 POST 요청은 CSRF 보호를 건너뜁니다.
-    if (req.url === '/auth/refresh' && req.method === 'POST') {
-      return next();
-    }
-    // 그 외의 모든 요청에는 CSRF 보호를 적용합니다.
-    csrfProtection(req, res, next);
-  });
-
-  app.use((req: any, res, next) => {
-    if (req.csrfToken) {
-      res.cookie('XSRF-TOKEN', req.csrfToken(), {
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        domain: cookieDomain,
-      });
-    }
-    next();
-  });
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  // ✨ --- CORS 설정 추가 (필수) --- ✨
-  const allowedOrigins = [
-    `http://localhost:4000`,
-    `https://${configService.get<string>('ROOT_DOMAIN')}`,
-  ];
+  const prodBackendUrl = configService.get<string>('API_BASE_URL');
+  if (prodBackendUrl) {
+    allowedOrigins.push(prodBackendUrl);
+  }
   console.log('Allowed CORS origins:', allowedOrigins);
 
   app.enableCors({
@@ -85,25 +42,70 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Swagger 설정
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Surfai APIs')
-    .setDescription(
-      'NestJS와 ComfyUI를 연동한 AI 이미지 및 비디오 생성 서비스 Surfai의 API 문서입니다.',
-    )
-    .setVersion('1.0')
-    .addBearerAuth() // ✨ JWT 인증 방식을 사용하므로 addCookieAuth 대신 addBearerAuth 사용
-    .build();
+  // --- 공통 미들웨어 ---
+  app.use(cookieParser());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig, {
-    extraModels: [WorkflowParameterMappingItemDTO],
-  });
+  // ✨ --- 환경에 따른 CSRF 및 Swagger 설정 분기 --- ✨
+  if (isProduction) {
+    // --- ☁️ 운영 환경에서만 CSRF 보호 활성화 ---
+    console.log('CSRF protection is enabled for production.');
+    const rootDomain = configService.get<string>('ROOT_DOMAIN');
+    const cookieDomain =
+      rootDomain && rootDomain !== 'localhost' ? rootDomain : undefined;
 
-  SwaggerModule.setup('docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  });
+    const csrfProtection = csurf({
+      cookie: {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        domain: cookieDomain,
+      },
+    });
+
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.url === '/auth/refresh' && req.method === 'POST') {
+        return next();
+      }
+      csrfProtection(req, res, next);
+    });
+
+    app.use((req: any, res, next) => {
+      if (req.csrfToken) {
+        res.cookie('XSRF-TOKEN', req.csrfToken(), {
+          secure: true,
+          sameSite: 'none',
+          domain: cookieDomain,
+        });
+      }
+      next();
+    });
+  } else {
+    // --- 💻 개발 환경에서만 Swagger UI 활성화 ---
+    console.log('Swagger UI is enabled for development.');
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Surfai APIs (Development)')
+      .setDescription('SurfAI API 개발 문서입니다.')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig, {
+      extraModels: [WorkflowParameterMappingItemDTO],
+    });
+
+    SwaggerModule.setup('docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    });
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
