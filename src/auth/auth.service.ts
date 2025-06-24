@@ -103,6 +103,9 @@ export class AuthService {
       select: ['id', 'email', 'password', 'role', 'displayName'], // password를 명시적으로 포함
     });
     if (user) {
+      if (user.password === null) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
       // ✨ 1. 비밀번호 비교 결과를 별도의 변수에 먼저 할당합니다.
       const isPasswordMatching = await bcrypt.compare(password, user.password);
 
