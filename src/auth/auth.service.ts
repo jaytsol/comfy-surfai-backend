@@ -13,10 +13,12 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from 'src/common/dto/create-user.dto';
 
 interface GoogleProfilePayload {
-  googleId?: string;
-  email: string;
-  displayName: string;
-  avatarUrl?: string;
+  user: {
+    googleId?: string;
+    email: string;
+    displayName: string;
+    avatarUrl?: string;
+  };
 }
 
 @Injectable()
@@ -154,33 +156,35 @@ export class AuthService {
    * Google 프로필 정보로 사용자를 찾거나, 없으면 새로 생성합니다.
    */
   async findOrCreateGoogleUser(profile: GoogleProfilePayload): Promise<User> {
-    let user = await this.userRepository.findOne({
-      where: { googleId: profile.googleId },
+    const { user } = profile;
+
+    let result: User | null = await this.userRepository.findOne({
+      where: { googleId: user.googleId },
     });
 
-    if (user) {
-      user.displayName = profile.displayName;
-      user.imageUrl = profile.avatarUrl;
-      return this.userRepository.save(user);
+    if (result) {
+      result.displayName = user.displayName;
+      result.imageUrl = user.avatarUrl;
+      return this.userRepository.save(result);
     }
 
     // 이메일로 기존 계정 확인 및 연동
-    user = await this.userRepository.findOne({
-      where: { email: profile.email },
+    result = await this.userRepository.findOne({
+      where: { email: user.email },
     });
-    if (user) {
-      user.googleId = profile.googleId;
-      user.imageUrl = user.imageUrl || profile.avatarUrl;
-      return this.userRepository.save(user);
+    if (result) {
+      result.googleId = user.googleId;
+      result.imageUrl = result.imageUrl || user.avatarUrl;
+      return this.userRepository.save(result);
     }
 
     // 신규 사용자 생성
     const newUser = this.userRepository.create({
-      googleId: profile.googleId,
-      email: profile.email,
-      displayName: profile.displayName || profile.email,
-      imageUrl: profile.avatarUrl,
-      role: this.adminEmails.includes(profile.email) ? Role.Admin : Role.User,
+      googleId: user.googleId,
+      email: user.email,
+      displayName: user.displayName || user.email,
+      imageUrl: user.avatarUrl,
+      role: this.adminEmails.includes(user.email) ? Role.Admin : Role.User,
     });
     return this.userRepository.save(newUser);
   }
@@ -194,7 +198,7 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
 
     // ✨ login 메소드를 재사용하여 새로운 토큰들을 생성하고 DB에 저장합니다.
-    const tokens = await this.handleGoogleLogin(user);
+    const tokens = await this.handleGoogleLogin({ user });
     return tokens;
   }
 
