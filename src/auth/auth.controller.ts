@@ -143,9 +143,8 @@ export class AuthController {
     description: '인증 성공 시 프론트엔드 페이지로 리디렉션',
   })
   async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
-    const { accessToken, refreshToken } = await this.authService.login(
-      req.user,
-    );
+    const { accessToken, refreshToken } =
+      await this.authService.handleGoogleLogin(req.user);
     this.setTokenCookies(res, accessToken, refreshToken);
     res.redirect(`${this.frontendUrl}/history`);
   }
