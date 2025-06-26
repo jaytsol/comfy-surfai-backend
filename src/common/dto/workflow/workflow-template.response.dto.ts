@@ -1,8 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// WorkflowParameterMappingItem 인터페이스는 workflow.entity.ts에서 가져오거나,
-// DTO와 동일한 구조로 여기에 별도 정의할 수도 있습니다.
-// 여기서는 엔티티의 인터페이스를 재사용한다고 가정합니다.
-import { WorkflowParameterMappingItem } from 'src/common/entities/workflow.entity'; // 실제 엔티티 경로로 수정 필요
+import { WorkflowParameterMappingItem } from 'src/common/interfaces/workflow.interface';
 
 export class WorkflowTemplateResponseDTO {
   @ApiProperty({ example: 1, description: '워크플로우 템플릿의 고유 ID' })

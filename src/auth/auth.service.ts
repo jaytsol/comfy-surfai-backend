@@ -24,6 +24,7 @@ interface GoogleProfilePayload {
 @Injectable()
 export class AuthService {
   private readonly adminEmails: string[];
+  private readonly defaultProfileImageUrl: string;
 
   constructor(
     @InjectRepository(User)
@@ -33,6 +34,12 @@ export class AuthService {
   ) {
     const adminEmailString = this.configService.get<string>('ADMIN_EMAILS', '');
     this.adminEmails = adminEmailString.split(',').map((email) => email.trim());
+
+    // ✨ 환경 변수에서 기본 프로필 이미지 URL을 가져옵니다.
+    this.defaultProfileImageUrl = this.configService.get<string>(
+      'DEFAULT_PROFILE_IMAGE_URL',
+      '',
+    );
   }
 
   /**
@@ -87,8 +94,18 @@ export class AuthService {
       role: this.adminEmails.includes(createUserInput.email)
         ? Role.Admin
         : Role.User,
+      imageUrl: this.defaultProfileImageUrl,
     });
     return this.userRepository.save(newUser);
+  }
+
+  /**
+   * ID로 사용자를 찾습니다. (JwtStrategy에서 사용)
+   * @param id 찾을 사용자의 ID
+   * @returns User 엔티티 또는 null
+   */
+  async findUserById(id: number): Promise<User | null> {
+    return this.userRepository.findOneBy({ id });
   }
 
   /**
@@ -110,7 +127,7 @@ export class AuthService {
       const isPasswordMatching = await bcrypt.compare(password, user.password);
 
       // ✨ 2. if 문에서는 이 변수를 사용하여 조건을 확인합니다.
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+
       if (isPasswordMatching) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...result } = user;

@@ -9,7 +9,7 @@ export class UserResponseDTO {
   @ApiProperty()
   displayName: string;
   @ApiProperty()
-  imageUrl?: string;
+  imageUrl: string;
   @ApiProperty({ enum: Role })
   role: Role;
 }
