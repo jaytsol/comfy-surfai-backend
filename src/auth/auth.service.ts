@@ -92,6 +92,15 @@ export class AuthService {
   }
 
   /**
+   * ID로 사용자를 찾습니다. (JwtStrategy에서 사용)
+   * @param id 찾을 사용자의 ID
+   * @returns User 엔티티 또는 null
+   */
+  async findUserById(id: number): Promise<User | null> {
+    return this.userRepository.findOneBy({ id });
+  }
+
+  /**
    * (신규) 이메일/비밀번호 사용자 검증
    */
   async validateUser(
