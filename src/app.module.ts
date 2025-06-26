@@ -15,6 +15,7 @@ import { EventsGateway } from './common/events/events.gateway';
 import { StorageModule } from './storage/storage.module';
 import { GeneratedOutputModule } from './generated-output/generated-output.module';
 import { GeneratedOutput } from './common/entities/generated-output.entity';
+import { AdminModule } from './admin/admin.module';
 
 const configService = new ConfigService();
 
@@ -40,6 +41,7 @@ const configService = new ConfigService();
     GeneratedOutputModule,
     WorkflowModule,
     StorageModule,
+    AdminModule,
   ],
   controllers: [AppController, ComfyUIController],
   providers: [AppService, ComfyUIService, EventsGateway],
