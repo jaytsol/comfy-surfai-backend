@@ -1,4 +1,4 @@
-// src/workflow/workflow.controller.ts
+// src/admin/workflow/workflow.controller.ts
 import {
   Controller,
   Post,

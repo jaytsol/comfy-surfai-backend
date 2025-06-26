@@ -1,10 +1,9 @@
-// src/workflow/workflow.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm'; // 👈 TypeOrmModule 임포트
-import { Workflow } from '../../common/entities/workflow.entity'; // 👈 Workflow 엔티티 임포트 (경로 확인!)
+import { Workflow } from 'src/common/entities/workflow.entity'; // 👈 Workflow 엔티티 임포트 (경로 확인!)
 import { WorkflowService } from './workflow.service';
 import { WorkflowController } from './workflow.controller';
-import { AuthModule } from '../../auth/auth.module'; // AuthModule이 필요하다면 임포트 유지
+import { AuthModule } from 'src/auth/auth.module'; // AuthModule이 필요하다면 임포트 유지
 
 @Module({
   imports: [
