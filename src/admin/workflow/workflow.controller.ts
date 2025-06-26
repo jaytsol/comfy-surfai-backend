@@ -15,9 +15,9 @@ import {
   Delete, // req.user.id를 가져오기 위해
 } from '@nestjs/common';
 import { WorkflowService } from './workflow.service'; // 곧 생성할 서비스
-import { RolesGuard } from '../common/guards/roles.guard'; // 경로 확인 및 수정 필요
-import { Roles } from '../common/decorators/roles.decorator'; // 경로 확인 및 수정 필요
-import { Role } from '../common/enums/role.enum'; // User 모듈의 Role Enum 경로 확인 및 수정 필요
+import { RolesGuard } from 'src/common/guards/roles.guard'; // 경로 확인 및 수정 필요
+import { Roles } from 'src/common/decorators/roles.decorator'; // 경로 확인 및 수정 필요
+import { Role } from 'src/common/enums/role.enum'; // User 모듈의 Role Enum 경로 확인 및 수정 필요
 
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto'; // 곧 생성할 dto
 import { WorkflowTemplateResponseDTO } from 'src/common/dto/workflow/workflow-template.response.dto'; // 곧 생성할 dto
@@ -30,7 +30,7 @@ import {
   ApiCookieAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { Workflow } from '../common/entities/workflow.entity'; // 실제 엔티티 경로로 수정 필요
+import { Workflow } from 'src/common/entities/workflow.entity'; // 실제 엔티티 경로로 수정 필요
 import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 

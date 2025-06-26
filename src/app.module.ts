@@ -9,7 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './common/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
-import { WorkflowModule } from './workflow/workflow.module';
+import { WorkflowModule } from './admin/workflow/workflow.module';
 import { Workflow } from './common/entities/workflow.entity';
 import { EventsGateway } from './common/events/events.gateway';
 import { StorageModule } from './storage/storage.module';

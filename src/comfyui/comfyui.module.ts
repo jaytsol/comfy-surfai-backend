@@ -2,9 +2,9 @@
 import { Module } from '@nestjs/common';
 import { ComfyUIService } from './comfyui.service';
 import { ComfyUIController } from './comfyui.controller';
-import { WorkflowModule } from '../workflow/workflow.module';
 import { StorageModule } from '../storage/storage.module';
 import { GeneratedOutputModule } from '../generated-output/generated-output.module';
+import { WorkflowModule } from 'src/admin/workflow/workflow.module';
 // HttpModule 등 ComfyUI 통신에 필요한 다른 모듈들도 여기에 포함될 수 있습니다.
 // import { HttpModule } from '@nestjs/axios';
 

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AdminWorkflowModule } from './workflow/admin-workflow.module';
+import { WorkflowModule } from './workflow/workflow.module';
 
 @Module({
-  imports: [AdminWorkflowModule],
+  imports: [WorkflowModule],
 })
 export class AdminModule {}
