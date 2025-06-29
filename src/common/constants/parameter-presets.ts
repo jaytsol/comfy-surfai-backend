@@ -55,6 +55,13 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '결과물의 디테일을 정교화하는 단계 수입니다.',
     categories: ['image', 'video', 'text-to-image'],
   },
+  {
+    key: 'denoise',
+    label: 'Denoise',
+    type: 'number',
+    description: '이미지 생성 과정에서 노이즈를 얼마나 제거하고 원본을 따를지 결정합니다. (0.0 ~ 1.0)',
+    categories: ['image', 'text-to-image', 'image-to-video'],
+  },
 
   // --- Image & Video Resolution ---
   {
@@ -72,7 +79,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   
-  // --- Sampler ---
+  // --- Sampler & Scheduler ---
   {
     key: 'sampler_name',
     label: 'Sampler Name',
@@ -82,11 +89,28 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     options: ['euler', 'euler_ancestral', 'dpmpp_2m', 'dpmpp_sde', 'dpmpp_2m_sde', 'lcm'],
   },
   {
+    key: 'scheduler',
+    label: 'Scheduler',
+    type: 'select',
+    description: '노이즈 감소 스케줄링 방식을 선택합니다.',
+    categories: ['image', 'text-to-image'],
+    options: ['normal', 'karras', 'exponential', 'simple', 'ddim_uniform'],
+  },
+  {
     key: 'add_noise',
     label: 'Add Noise',
     type: 'boolean',
     description: '샘플링 과정에 노이즈를 추가할지 여부를 결정합니다.',
     categories: ['image', 'video', 'text-to-image'],
+  },
+
+  // --- SD3 Specific ---
+  {
+    key: 'shift',
+    label: 'Shift (SD3)',
+    type: 'number',
+    description: 'Stable Diffusion 3 모델의 고유 파라미터입니다.',
+    categories: ['image', 'text-to-image'],
   },
 
   // --- Video-Specific Parameters ---
