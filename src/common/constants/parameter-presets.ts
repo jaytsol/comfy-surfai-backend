@@ -18,6 +18,13 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '생성의 무작위성을 제어합니다. -1은 랜덤 시드를 의미합니다.',
     categories: ['image', 'video', 'audio', 'text-to-image', 'image-to-video'],
   },
+  {
+    key: 'batch_size',
+    label: 'Batch Size',
+    type: 'number',
+    description: '한 번에 생성할 결과물의 개수입니다.',
+    categories: ['image', 'video', 'text-to-image', 'image-to-video'],
+  },
 
   // --- Text & Image & Video Common Parameters ---
   {
@@ -74,6 +81,13 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'text-to-image'],
     options: ['euler', 'euler_ancestral', 'dpmpp_2m', 'dpmpp_sde', 'dpmpp_2m_sde', 'lcm'],
   },
+  {
+    key: 'add_noise',
+    label: 'Add Noise',
+    type: 'boolean',
+    description: '샘플링 과정에 노이즈를 추가할지 여부를 결정합니다.',
+    categories: ['image', 'video', 'text-to-image'],
+  },
 
   // --- Video-Specific Parameters ---
   {
@@ -81,6 +95,20 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     label: 'FPS (Frames Per Second)',
     type: 'number',
     description: '비디오의 초당 프레임 수입니다.',
+    categories: ['video', 'image-to-video'],
+  },
+  {
+    key: 'crf',
+    label: 'CRF (Constant Rate Factor)',
+    type: 'number',
+    description: '비디오 압축 품질을 제어합니다. 낮을수록 품질이 높습니다. (권장: 18-28)',
+    categories: ['video', 'image-to-video'],
+  },
+  {
+    key: 'pingpong',
+    label: 'Ping-Pong Effect',
+    type: 'boolean',
+    description: '비디오를 정방향 재생 후 역방향으로 재생하는 핑퐁 효과를 적용합니다.',
     categories: ['video', 'image-to-video'],
   },
   {
