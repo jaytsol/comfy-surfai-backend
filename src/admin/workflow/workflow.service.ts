@@ -11,6 +11,11 @@ import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workfl
 import { plainToInstance } from 'class-transformer';
 import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { validate } from 'class-validator';
+import {
+  ParameterPreset,
+  PARAMETER_PRESETS,
+  WORKFLOW_CATEGORIES,
+} from 'src/common/constants/parameter-presets';
 // import { ListWorkflowTemplatesQueryDTO } from '../common/dto/workflow/list-workflow-templates-query.dto'; // 향후 페이지네이션/필터링용
 
 @Injectable()
@@ -21,8 +26,30 @@ export class WorkflowService {
   ) {}
 
   /**
+   * 모든 워크플로우 카테고리 목록을 반환합니다.
+   * @returns {string[]} 카테고리 이름 배열
+   */
+  getWorkflowCategories(): string[] {
+    return WORKFLOW_CATEGORIES;
+  }
+
+  /**
+   * 특정 카테고리에 속하는 파라미터 사전 설정 목록을 반환합니다.
+   * @param category 필터링할 카테고리 이름
+   * @returns {ParameterPreset[]} 해당 카테고리의 파라미터 사전 설정 배열
+   */
+  getParameterPresets(category?: string): ParameterPreset[] {
+    if (!category) {
+      return PARAMETER_PRESETS; // 카테고리가 없으면 전체 반환
+    }
+    return PARAMETER_PRESETS.filter((preset) =>
+      preset.categories.includes(category),
+    );
+  }
+  
+  /**
    * 새로운 워크플로우 템플릿을 생성합니다. (Admin 전용)
-   * @param createDTO 템플릿 생성 정보 dto
+   * @param createDTO 템플릿 생성 정�� dto
    * @param adminUserId 템플릿을 생성하는 관리자의 ID
    * @returns 생성된 Workflow 엔티티
    */
@@ -121,7 +148,7 @@ export class WorkflowService {
     updateDTO: UpdateWorkflowTemplateDTO,
     adminUserId: number,
   ): Promise<Workflow> {
-    // 먼저 해당 ID의 '템플릿'이 존재하는지 확인 (findOneTemplateById가 NotFoundException 처리)
+    // 먼�� 해당 ID의 '템플릿'이 존재하는지 확인 (findOneTemplateById가 NotFoundException 처리)
     const existingTemplate = await this.findOneTemplateById(id);
 
     // (선택적) 추가적인 수정 권한 검증 로직
@@ -167,7 +194,7 @@ export class WorkflowService {
       `[WorkflowService] Admin #${adminUserId} is removing template #${id} named "${templateToRemove.name}".`,
     );
 
-    // TypeORM의 remove 메소드는 엔티티 인스턴스를 받아 삭제합니다.
+    // TypeORM의 remove 메소드는 엔티티 인스턴스를 받아 삭제��니다.
     // 연관된 관계(예: 이 템플릿을 참조하는 '나만의 워크플로우' 인스턴스)에 대한 처리는
     // Workflow 엔티티의 @ManyToOne 또는 @OneToMany 데코레이터의 onDelete 옵션 ('SET NULL', 'CASCADE' 등)에 따라 달라집니다.
     // 현재 Workflow 엔티티의 sourceTemplate 관계에 onDelete: 'SET NULL'이 설정되어 있다면,
