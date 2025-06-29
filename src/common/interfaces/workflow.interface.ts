@@ -1,21 +1,28 @@
-/**
- * 워크플로우의 동적 파라미터에 대한 UI 렌더링 정보를 정의합니다.
- */
-export interface WorkflowParameterUIConfig {
-  type: 'text' | 'number' | 'textarea' | 'checkbox' | 'select';
-  label?: string;
-  description?: string;
-  options?: string[];
-  placeholder?: string;
-}
+// src/common/interfaces/workflow.interface.ts
 
 /**
- * 워크플로우의 parameter_map에 포함될 각 항목의 구조를 정의합니다.
+ * 워크플로우의 parameter_map에 포함될 각 항목의 표준화된 구조를 정의합니다.
+ * 이 구조는 UI 렌더링, 데이터 유효성 검사, 노드 매핑에 필요한 모든 정보를 포함합니다.
  */
 export interface WorkflowParameterMappingItem {
+  // 1. ComfyUI 노드 매핑 정보 (필수)
   node_id: string;
   input_name: string;
-  ui?: WorkflowParameterUIConfig;
+
+  // 2. UI 렌더링을 위한 정보
+  label: string;
+  description: string;
+  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean';
+  default_value?: any;
+  options?: string[];
+
+  // 3. 데이터 유효성 검사를 위한 정보 (선택적)
+  validation?: {
+    required?: boolean;
+    min?: number;
+    max?: number;
+    step?: number;
+  };
 }
 
 /**
@@ -28,15 +35,15 @@ export interface WorkflowTemplate {
   name: string;
   description?: string;
   /**
-   * ComfyUI의 원본 워크플로우 API 포맷 JSON 객체입니다.
-   * 이 속성은 템플릿의 경우 반드시 존재해야 합니다.
+   * ComfyUI의 원�� 워크플로우 API 포맷 JSON 객체입니다.
    */
   definition: object;
+  /**
+   * 표준화된 구조를 따르는 파라미터 맵입니다.
+   */
   parameter_map?: Record<string, WorkflowParameterMappingItem>;
   previewImageUrl?: string;
   tags?: string[];
-
-  // ✨ --- 오류 해결을 위해 Workflow 엔티티의 속성들을 추가합니다 --- ✨
   isPublicTemplate: boolean;
   isTemplate: boolean;
   ownerUserId?: number;
