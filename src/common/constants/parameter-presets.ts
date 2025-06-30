@@ -12,7 +12,8 @@ export interface ParameterPreset {
     min?: number;
     max?: number;
     step?: number;
-  }
+  };
+  essentialForCategories?: string[]; // 이 파라미터가 필수로 자동 추가될 카테고리 목록
 }
 
 export const PARAMETER_PRESETS: ParameterPreset[] = [
@@ -24,11 +25,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '생성의 무작위성을 제어합니다. -1은 랜덤 시드를 의미합니다.',
     categories: ['image', 'video', 'audio', 'text-to-image', 'image-to-video'],
     default_value: -1,
-    validation: {
-      min: 1,
-      max: 18446744073709551615,
-      step: 1,
-    }
+    validation: { min: 1, max: 18446744073709551615, step: 1 },
+    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   {
     key: 'batch_size',
@@ -37,7 +35,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '한 번에 생성할 결과물의 개수입니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
     default_value: 1,
-    validation: { min: 1, max: 16, step: 1 }
+    validation: { min: 1, max: 16, step: 1 },
+    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
 
   // --- Text & Image & Video Common Parameters ---
@@ -47,6 +46,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'textarea',
     description: '생성할 결과물의 주된 내용을 상세히 기술합니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   {
     key: 'negative_prompt',
@@ -54,6 +54,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'textarea',
     description: '결과물에서 피하고 싶은 요소를 기술합니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   {
     key: 'cfg',
@@ -62,7 +63,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '프롬프트를 얼마나 엄격하게 따를지 결정하는 값입니다.',
     categories: ['image', 'video', 'text-to-image'],
     default_value: 7,
-    validation: { min: 0, max: 20, step: 0.5 }
+    validation: { min: 0, max: 20, step: 0.5 },
+    essentialForCategories: ['image', 'text-to-image'],
   },
   {
     key: 'steps',
@@ -71,7 +73,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '결과물의 디테일을 정교화하는 단계 수입니다.',
     categories: ['image', 'video', 'text-to-image'],
     default_value: 25,
-    validation: { min: 1, max: 100, step: 1 }
+    validation: { min: 1, max: 100, step: 1 },
+    essentialForCategories: ['image', 'text-to-image'],
   },
   {
     key: 'denoise',
@@ -80,7 +83,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '이미지 생성 과정에서 노이즈를 얼마나 제거하고 원본을 따를지 결정합니다. (0.0 ~ 1.0)',
     categories: ['image', 'text-to-image', 'image-to-video'],
     default_value: 1.0,
-    validation: { min: 0, max: 1, step: 0.05 }
+    validation: { min: 0, max: 1, step: 0.05 },
   },
 
   // --- Image & Video Resolution ---
@@ -91,7 +94,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '결과물의 가로 너비(픽셀)입니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
     default_value: 1024,
-    validation: { min: 64, max: 4096, step: 8 }
+    validation: { min: 64, max: 4096, step: 8 },
+    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   {
     key: 'height',
@@ -100,7 +104,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '결과물의 세로 높이(픽셀)입니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
     default_value: 1024,
-    validation: { min: 64, max: 4096, step: 8 }
+    validation: { min: 64, max: 4096, step: 8 },
+    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   
   // --- Sampler & Scheduler ---
@@ -136,7 +141,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: 'Stable Diffusion 3 모델의 고유 파라미터입니다.',
     categories: ['image', 'text-to-image'],
-    validation: { step: 0.1 }
+    validation: { step: 0.1 },
   },
 
   // --- Video-Specific Parameters ---
@@ -147,7 +152,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '비디오의 초당 프레임 수입니다.',
     categories: ['video', 'image-to-video'],
     default_value: 24,
-    validation: { min: 1, max: 120, step: 1 }
+    validation: { min: 1, max: 120, step: 1 },
+    essentialForCategories: ['video', 'image-to-video'],
   },
   {
     key: 'crf',
@@ -156,7 +162,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '비디오 압축 품질을 제어합니다. 낮을수록 품질이 높습니다. (권장: 18-28)',
     categories: ['video', 'image-to-video'],
     default_value: 23,
-    validation: { min: 0, max: 51, step: 1 }
+    validation: { min: 0, max: 51, step: 1 },
   },
   {
     key: 'pingpong',
@@ -171,7 +177,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '비디오의 움직임 강도를 제어합니다.',
     categories: ['video', 'image-to-video'],
-    validation: { min: 1, step: 1 }
+    validation: { min: 1, step: 1 },
   },
   {
     key: 'length',
@@ -179,7 +185,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '생성될 비디오의 전체 프레임 수입니다.',
     categories: ['video', 'image-to-video'],
-    validation: { min: 1, step: 1 }
+    validation: { min: 1, step: 1 },
+    essentialForCategories: ['video', 'image-to-video'],
   },
 
   // --- Image-to-Video Specific ---
@@ -189,6 +196,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'text',
     description: '비디오 생성의 기반이 될 이미지입니다.',
     categories: ['image-to-video'],
+    essentialForCategories: ['image-to-video'],
   },
   {
     key: 'augmentation_level',
@@ -196,7 +204,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '입력 이미지를 얼마나 변형시킬지 결정합니다.',
     categories: ['image-to-video'],
-    validation: { min: 0, step: 0.01 }
+    validation: { min: 0, step: 0.01 },
   },
 ];
 
