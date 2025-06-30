@@ -307,6 +307,9 @@ export class ComfyUIService implements OnModuleInit {
     const modifiedDefinition: ComfyUIInput = JSON.parse(
       JSON.stringify(baseDefinition),
     );
+    
+    // 최종적으로 사용될 파라미터를 저장할 객체
+    const finalParameters = { ...generateDTO.parameters };
 
     if (generateDTO.parameters && parameterMap) {
       const unknownParams = Object.keys(generateDTO.parameters).filter(
@@ -329,6 +332,8 @@ export class ComfyUIService implements OnModuleInit {
             // ComfyUI의 최대 seed 값 범위 내에서 랜덤 정수 생성
             finalValue = Math.floor(Math.random() * 18446744073709551615);
             console.log(`[ComfyUIService] Random seed generated: ${finalValue}`);
+            // 최종 파라미터 객체에도 업데이트
+            finalParameters.seed = finalValue;
           }
           modifiedDefinition[mappingInfo.node_id].inputs[
             mappingInfo.input_name
@@ -341,11 +346,11 @@ export class ComfyUIService implements OnModuleInit {
       const result = await this.sendPromptToComfyUI(modifiedDefinition);
 
       if (result && result.prompt_id) {
-        // ✨ prompt_id와 요청 메타데이터를 Map에 저장하여 나중에 WebSocket 메시지 처리 시 사용
+        // ✨ 실제 사용된 파라미터(finalParameters)를 메타데이터에 저장
         this.promptMetadata.set(result.prompt_id, {
           userId: adminUserId,
           templateId: generateDTO.templateId,
-          parameters: generateDTO.parameters,
+          parameters: finalParameters, 
         });
         console.log(
           `[ComfyUIService] Prompt #${result.prompt_id} metadata stored for user #${adminUserId}. Awaiting 'executed' message.`,
