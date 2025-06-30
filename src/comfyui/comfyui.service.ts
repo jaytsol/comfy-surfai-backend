@@ -323,9 +323,16 @@ export class ComfyUIService implements OnModuleInit {
       )) {
         const mappingInfo = parameterMap[paramKey];
         if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
+          let finalValue = paramValue;
+          // seed가 -1이면 (숫자 또는 문자열) 랜덤 값으로 교체
+          if (paramKey === 'seed' && Number(finalValue) === -1) {
+            // ComfyUI의 최대 seed 값 범위 내에서 랜덤 정수 생성
+            finalValue = Math.floor(Math.random() * 18446744073709551615);
+            console.log(`[ComfyUIService] Random seed generated: ${finalValue}`);
+          }
           modifiedDefinition[mappingInfo.node_id].inputs[
             mappingInfo.input_name
-          ] = paramValue;
+          ] = finalValue;
         }
       }
     }

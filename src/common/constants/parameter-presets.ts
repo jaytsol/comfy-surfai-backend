@@ -13,7 +13,7 @@ export interface ParameterPreset {
     max?: number;
     step?: number;
   };
-  essentialForCategories?: string[]; // 이 파라미터가 필수로 자동 추가될 카테고리 목록
+  essentialForCategories?: string[];
 }
 
 export const PARAMETER_PRESETS: ParameterPreset[] = [
@@ -25,7 +25,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '생성의 무작위성을 제어합니다. -1은 랜덤 시드를 의미합니다.',
     categories: ['image', 'video', 'audio', 'text-to-image', 'image-to-video'],
     default_value: -1,
-    validation: { min: 1, max: 18446744073709551615, step: 1 },
+    validation: { min: -1, max: 18446744073709551615, step: 1 },
     essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
   },
   {
