@@ -26,8 +26,6 @@ import {
   ApiResponse,
   ApiBody,
   ApiCookieAuth,
-  ApiParam,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { Workflow } from 'src/common/entities/workflow.entity';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -64,7 +62,10 @@ export class WorkflowController {
     @Request() req,
   ): Promise<WorkflowTemplateResponseDTO> {
     const adminUserId = req.user.id;
-    const newTemplate = await this.workflowService.createTemplate(createDTO, adminUserId);
+    const newTemplate = await this.workflowService.createTemplate(
+      createDTO,
+      adminUserId,
+    );
     return this.mapWorkflowToResponseDTO(newTemplate);
   }
 
@@ -74,8 +75,10 @@ export class WorkflowController {
   @ApiBody({
     schema: {
       type: 'object',
-      additionalProperties: { $ref: '#/components/schemas/WorkflowParameterMappingItemDTO' }
-    }
+      additionalProperties: {
+        $ref: '#/components/schemas/WorkflowParameterMappingItemDTO',
+      },
+    },
   })
   @ApiResponse({ status: 200, type: WorkflowTemplateResponseDTO })
   async updateParameterMap(
@@ -84,7 +87,11 @@ export class WorkflowController {
     @Request() req,
   ): Promise<WorkflowTemplateResponseDTO> {
     const adminUserId = req.user.id;
-    const updatedTemplate = await this.workflowService.updateParameterMap(id, parameterMap, adminUserId);
+    const updatedTemplate = await this.workflowService.updateParameterMap(
+      id,
+      parameterMap,
+      adminUserId,
+    );
     return this.mapWorkflowToResponseDTO(updatedTemplate);
   }
 
@@ -93,12 +100,14 @@ export class WorkflowController {
   @ApiOperation({ summary: '모든 워크플로우 템플릿 목록 조회' })
   async findAllTemplates(): Promise<WorkflowTemplateResponseDTO[]> {
     const templates = await this.workflowService.findAllTemplates();
-    return templates.map(t => this.mapWorkflowToResponseDTO(t));
+    return templates.map((t) => this.mapWorkflowToResponseDTO(t));
   }
 
   @Get(':id')
   @ApiOperation({ summary: '특정 워크플로우 템플릿 상세 조회' })
-  async findOneTemplate(@Param('id', ParseIntPipe) id: number): Promise<WorkflowTemplateResponseDTO> {
+  async findOneTemplate(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<WorkflowTemplateResponseDTO> {
     const template = await this.workflowService.findOneTemplateById(id);
     return this.mapWorkflowToResponseDTO(template);
   }
@@ -107,15 +116,22 @@ export class WorkflowController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '워크플로우 템플릿 삭제' })
-  async removeTemplate(@Param('id', ParseIntPipe) id: number, @Request() req): Promise<void> {
+  async removeTemplate(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ): Promise<void> {
     const adminUserId = req.user.id;
     await this.workflowService.removeTemplate(id, adminUserId);
   }
 
   // --- DTO 매퍼 ---
-  private mapWorkflowToResponseDTO(workflow: Workflow): WorkflowTemplateResponseDTO {
+  private mapWorkflowToResponseDTO(
+    workflow: Workflow,
+  ): WorkflowTemplateResponseDTO {
     if (!workflow) {
-      throw new NotFoundException('Workflow data for mapping is unexpectedly null.');
+      throw new NotFoundException(
+        'Workflow data for mapping is unexpectedly null.',
+      );
     }
     const responseDTO = new WorkflowTemplateResponseDTO();
     responseDTO.id = workflow.id;
