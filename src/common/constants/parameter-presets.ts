@@ -6,7 +6,13 @@ export interface ParameterPreset {
   type: 'text' | 'number' | 'textarea' | 'select' | 'boolean';
   description: string;
   categories: string[];
-  options?: string[]; // 'select' 타입일 경우 사용
+  options?: string[];
+  default_value?: any;
+  validation?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  }
 }
 
 export const PARAMETER_PRESETS: ParameterPreset[] = [
@@ -17,6 +23,12 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '생성의 무작위성을 제어합니다. -1은 랜덤 시드를 의미합니다.',
     categories: ['image', 'video', 'audio', 'text-to-image', 'image-to-video'],
+    default_value: -1,
+    validation: {
+      min: 1,
+      max: 18446744073709551615,
+      step: 1,
+    }
   },
   {
     key: 'batch_size',
@@ -24,6 +36,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '한 번에 생성할 결과물의 개수입니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    default_value: 1,
+    validation: { min: 1, max: 16, step: 1 }
   },
 
   // --- Text & Image & Video Common Parameters ---
@@ -47,6 +61,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '프롬프트를 얼마나 엄격하게 따를지 결정하는 값입니다.',
     categories: ['image', 'video', 'text-to-image'],
+    default_value: 7,
+    validation: { min: 0, max: 20, step: 0.5 }
   },
   {
     key: 'steps',
@@ -54,6 +70,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '결과물의 디테일을 정교화하는 단계 수입니다.',
     categories: ['image', 'video', 'text-to-image'],
+    default_value: 25,
+    validation: { min: 1, max: 100, step: 1 }
   },
   {
     key: 'denoise',
@@ -61,6 +79,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '이미지 생성 과정에서 노이즈를 얼마나 제거하고 원본을 따를지 결정합니다. (0.0 ~ 1.0)',
     categories: ['image', 'text-to-image', 'image-to-video'],
+    default_value: 1.0,
+    validation: { min: 0, max: 1, step: 0.05 }
   },
 
   // --- Image & Video Resolution ---
@@ -70,6 +90,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '결과물의 가로 너비(픽셀)입니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    default_value: 1024,
+    validation: { min: 64, max: 4096, step: 8 }
   },
   {
     key: 'height',
@@ -77,6 +99,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '결과물의 세로 높이(픽셀)입니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    default_value: 1024,
+    validation: { min: 64, max: 4096, step: 8 }
   },
   
   // --- Sampler & Scheduler ---
@@ -102,6 +126,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'boolean',
     description: '샘플링 과정에 노이즈를 추가할지 여부를 결정합니다.',
     categories: ['image', 'video', 'text-to-image'],
+    default_value: true,
   },
 
   // --- SD3 Specific ---
@@ -111,6 +136,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: 'Stable Diffusion 3 모델의 고유 파라미터입니다.',
     categories: ['image', 'text-to-image'],
+    validation: { step: 0.1 }
   },
 
   // --- Video-Specific Parameters ---
@@ -120,6 +146,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '비디오의 초당 프레임 수입니다.',
     categories: ['video', 'image-to-video'],
+    default_value: 24,
+    validation: { min: 1, max: 120, step: 1 }
   },
   {
     key: 'crf',
@@ -127,6 +155,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '비디오 압축 품질을 제어합니다. 낮을수록 품질이 높습니다. (권장: 18-28)',
     categories: ['video', 'image-to-video'],
+    default_value: 23,
+    validation: { min: 0, max: 51, step: 1 }
   },
   {
     key: 'pingpong',
@@ -141,6 +171,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '비디오의 움직임 강도를 제어합니다.',
     categories: ['video', 'image-to-video'],
+    validation: { min: 1, step: 1 }
   },
   {
     key: 'length',
@@ -148,13 +179,14 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '생성될 비디오의 전체 프레임 수입니다.',
     categories: ['video', 'image-to-video'],
+    validation: { min: 1, step: 1 }
   },
 
   // --- Image-to-Video Specific ---
   {
     key: 'input_image',
     label: 'Input Image',
-    type: 'text', // 실제로는 파일 업로드지만, 여기서는 경로를 텍스트로 받음
+    type: 'text',
     description: '비디오 생성의 기반이 될 이미지입니다.',
     categories: ['image-to-video'],
   },
@@ -164,6 +196,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'number',
     description: '입력 이미지를 얼마나 변형시킬지 결정합니다.',
     categories: ['image-to-video'],
+    validation: { min: 0, step: 0.01 }
   },
 ];
 
