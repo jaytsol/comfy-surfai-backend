@@ -28,8 +28,13 @@ export class WorkflowService {
     category: string,
   ): Promise<Record<string, WorkflowParameterMappingItemDTO>> {
     const validatedMap: Record<string, WorkflowParameterMappingItemDTO> = {};
+    const keys = Object.keys(parameterMap);
+    const uniqueKeys = new Set(keys);
 
-    // 1. 카테고리에 따른 필수 파라미터 검사
+    if (keys.length !== uniqueKeys.size) {
+      throw new BadRequestException('중복된 파라미터 키가 존재합니다.');
+    }
+
     const essentialKeys = PARAMETER_PRESETS
       .filter(p => p.essentialForCategories?.includes(category))
       .map(p => p.key);
@@ -40,10 +45,17 @@ export class WorkflowService {
       }
     }
 
-    // 2. 각 파라미터의 세부 유효성 검사
     for (const key in parameterMap) {
       if (Object.prototype.hasOwnProperty.call(parameterMap, key)) {
         const item = parameterMap[key];
+        
+        if (!item.node_id || item.node_id.trim() === '') {
+            throw new BadRequestException(`'${key}' 파라미터의 'node_id'는 필수입니다.`);
+        }
+        if (!item.input_name || item.input_name.trim() === '') {
+            throw new BadRequestException(`'${key}' 파라미터의 'input_name'은 필수입니다.`);
+        }
+
         const itemDTO = plainToInstance(WorkflowParameterMappingItemDTO, item);
         const errors = await validate(itemDTO);
         if (errors.length > 0) {
