@@ -10,7 +10,7 @@ export interface ParameterPreset {
   default_value?: any;
   validation?: {
     min?: number;
-    max?: number;
+    max?: number | string;
     step?: number;
   };
   essentialForCategories?: string[];
@@ -25,7 +25,11 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     description: '생성의 무작위성을 제어합니다. -1은 랜덤 시드를 의미합니다.',
     categories: ['image', 'video', 'audio', 'text-to-image', 'image-to-video'],
     default_value: -1,
-    validation: { min: -1, max: 18446744073709551615, step: 1 },
+    validation: {
+      min: -1,
+      max: '18446744073709551615', // 문자열로 처리하여 정밀도 손실 방지
+      step: 1,
+    },
     essentialForCategories: [
       'image',
       'video',
@@ -48,8 +52,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       'image-to-video',
     ],
   },
-
-  // --- Text & Image & Video Common Parameters ---
   {
     key: 'positive_prompt',
     label: 'Positive Prompt',
@@ -106,8 +108,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     default_value: 1.0,
     validation: { min: 0, max: 1, step: 0.05 },
   },
-
-  // --- Image & Video Resolution ---
   {
     key: 'width',
     label: 'Width',
@@ -138,8 +138,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       'image-to-video',
     ],
   },
-
-  // --- Sampler & Scheduler ---
   {
     key: 'sampler_name',
     label: 'Sampler Name',
@@ -171,8 +169,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'text-to-image'],
     default_value: true,
   },
-
-  // --- SD3 Specific ---
   {
     key: 'shift',
     label: 'Shift (SD3)',
@@ -181,8 +177,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'text-to-image'],
     validation: { step: 0.1 },
   },
-
-  // --- Video-Specific Parameters ---
   {
     key: 'fps',
     label: 'FPS (Frames Per Second)',
@@ -228,8 +222,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     validation: { min: 1, step: 1 },
     essentialForCategories: ['video', 'image-to-video'],
   },
-
-  // --- Image-to-Video Specific ---
   {
     key: 'input_image',
     label: 'Input Image',
