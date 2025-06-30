@@ -7,7 +7,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { Workflow } from 'src/common/entities/workflow.entity';
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto';
-import { UpdateParameterMapDTO } from 'src/common/dto/workflow/update-parameter-map.dto';
 import { plainToInstance } from 'class-transformer';
 import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { validate } from 'class-validator';
@@ -25,10 +24,12 @@ export class WorkflowService {
   ) {}
 
   private async validateParameterMap(
-    parameterMap: Record<string, WorkflowParameterMappingItemDTO>,
+    parameterMap: Record<string, any>,
     category: string,
-  ) {
-    // 1. 카테고리에 따른 필�� 파라미터 검사
+  ): Promise<Record<string, WorkflowParameterMappingItemDTO>> {
+    const validatedMap: Record<string, WorkflowParameterMappingItemDTO> = {};
+
+    // 1. 카테고리에 따른 필수 파라미터 검사
     const essentialKeys = PARAMETER_PRESETS
       .filter(p => p.essentialForCategories?.includes(category))
       .map(p => p.key);
@@ -48,12 +49,10 @@ export class WorkflowService {
         if (errors.length > 0) {
           throw new BadRequestException(`'${key}' 파라미터 유효성 검사 실패: ${errors.toString()}`);
         }
-        if (!item.node_id || !item.input_name) {
-          throw new BadRequestException(`'${key}' 파라미터의 node_id와 input_name은 필수입니다.`);
-        }
-        parameterMap[key] = itemDTO;
+        validatedMap[key] = itemDTO;
       }
     }
+    return validatedMap;
   }
 
   getWorkflowCategories(): string[] {
@@ -80,7 +79,7 @@ export class WorkflowService {
 
   async updateParameterMap(
     id: number,
-    updateDTO: UpdateParameterMapDTO,
+    parameterMap: Record<string, any>,
     adminUserId: number,
   ): Promise<Workflow> {
     const existingTemplate = await this.findOneTemplateById(id);
@@ -88,11 +87,9 @@ export class WorkflowService {
       throw new BadRequestException(`템플릿 #${id}에 카테고리가 설정되어 있지 않아 파라미터 맵을 업데이트할 수 없습니다.`);
     }
 
-    await this.validateParameterMap(updateDTO.parameter_map, existingTemplate.category);
+    const validatedParameterMap = await this.validateParameterMap(parameterMap, existingTemplate.category);
 
-    existingTemplate.parameter_map = updateDTO.parameter_map;
-    // 마지막 수정자를 기록하고 싶다면...
-    // existingTemplate.lastModifiedBy = adminUserId;
+    existingTemplate.parameter_map = validatedParameterMap;
     
     return this.workflowRepository.save(existingTemplate);
   }

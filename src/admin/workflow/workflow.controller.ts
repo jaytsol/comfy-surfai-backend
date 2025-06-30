@@ -19,7 +19,6 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto';
-import { UpdateParameterMapDTO } from 'src/common/dto/workflow/update-parameter-map.dto';
 import { WorkflowTemplateResponseDTO } from 'src/common/dto/workflow/workflow-template.response.dto';
 import {
   ApiTags,
@@ -33,6 +32,7 @@ import {
 import { Workflow } from 'src/common/entities/workflow.entity';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { ParameterPreset } from 'src/common/constants/parameter-presets';
+import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 
 @ApiTags('Admin - Workflow Templates')
 @ApiCookieAuth()
@@ -71,14 +71,20 @@ export class WorkflowController {
   // --- 2단계: 파라미터 맵 설정 ---
   @Put(':id/parameter-map')
   @ApiOperation({ summary: '2단계: 워크플로우 템플릿의 파라미터 맵 설정' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      additionalProperties: { $ref: '#/components/schemas/WorkflowParameterMappingItemDTO' }
+    }
+  })
   @ApiResponse({ status: 200, type: WorkflowTemplateResponseDTO })
   async updateParameterMap(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateDTO: UpdateParameterMapDTO,
+    @Body() parameterMap: Record<string, WorkflowParameterMappingItemDTO>,
     @Request() req,
   ): Promise<WorkflowTemplateResponseDTO> {
     const adminUserId = req.user.id;
-    const updatedTemplate = await this.workflowService.updateParameterMap(id, updateDTO, adminUserId);
+    const updatedTemplate = await this.workflowService.updateParameterMap(id, parameterMap, adminUserId);
     return this.mapWorkflowToResponseDTO(updatedTemplate);
   }
 
@@ -87,7 +93,7 @@ export class WorkflowController {
   @ApiOperation({ summary: '모든 워크플로우 템플릿 목록 조회' })
   async findAllTemplates(): Promise<WorkflowTemplateResponseDTO[]> {
     const templates = await this.workflowService.findAllTemplates();
-    return templates.map(this.mapWorkflowToResponseDTO);
+    return templates.map(t => this.mapWorkflowToResponseDTO(t));
   }
 
   @Get(':id')
@@ -100,7 +106,7 @@ export class WorkflowController {
   // --- 삭제 ---
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: '워크플로우 템플릿 삭���' })
+  @ApiOperation({ summary: '워크플로우 템플릿 삭제' })
   async removeTemplate(@Param('id', ParseIntPipe) id: number, @Request() req): Promise<void> {
     const adminUserId = req.user.id;
     await this.workflowService.removeTemplate(id, adminUserId);
