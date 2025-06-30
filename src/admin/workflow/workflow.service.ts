@@ -35,31 +35,39 @@ export class WorkflowService {
       throw new BadRequestException('중복된 파라미터 키가 존재합니다.');
     }
 
-    const essentialKeys = PARAMETER_PRESETS
-      .filter(p => p.essentialForCategories?.includes(category))
-      .map(p => p.key);
-    
+    const essentialKeys = PARAMETER_PRESETS.filter((p) =>
+      p.essentialForCategories?.includes(category),
+    ).map((p) => p.key);
+
     for (const essentialKey of essentialKeys) {
       if (!parameterMap[essentialKey]) {
-        throw new BadRequestException(`필수 파라미터 '${essentialKey}'가 누락되었습니다.`);
+        throw new BadRequestException(
+          `필수 파라미터 '${essentialKey}'가 누락되었습니다.`,
+        );
       }
     }
 
     for (const key in parameterMap) {
       if (Object.prototype.hasOwnProperty.call(parameterMap, key)) {
         const item = parameterMap[key];
-        
+
         if (!item.node_id || item.node_id.trim() === '') {
-            throw new BadRequestException(`'${key}' 파라미터의 'node_id'는 필수입니다.`);
+          throw new BadRequestException(
+            `'${key}' 파라미터의 'node_id'는 필수입니다.`,
+          );
         }
         if (!item.input_name || item.input_name.trim() === '') {
-            throw new BadRequestException(`'${key}' 파라미터의 'input_name'은 필수입니다.`);
+          throw new BadRequestException(
+            `'${key}' 파라미터의 'input_name'은 필수입니다.`,
+          );
         }
 
         const itemDTO = plainToInstance(WorkflowParameterMappingItemDTO, item);
         const errors = await validate(itemDTO);
         if (errors.length > 0) {
-          throw new BadRequestException(`'${key}' 파라미터 유효성 검사 실패: ${errors.toString()}`);
+          throw new BadRequestException(
+            `'${key}' 파라미터 유효성 검사 실패: ${errors.toString()}`,
+          );
         }
         validatedMap[key] = itemDTO;
       }
@@ -73,7 +81,9 @@ export class WorkflowService {
 
   getParameterPresets(category?: string): ParameterPreset[] {
     if (!category) return PARAMETER_PRESETS;
-    return PARAMETER_PRESETS.filter((preset) => preset.categories.includes(category));
+    return PARAMETER_PRESETS.filter((preset) =>
+      preset.categories.includes(category),
+    );
   }
 
   async createTemplate(
@@ -92,17 +102,23 @@ export class WorkflowService {
   async updateParameterMap(
     id: number,
     parameterMap: Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     adminUserId: number,
   ): Promise<Workflow> {
     const existingTemplate = await this.findOneTemplateById(id);
     if (!existingTemplate.category) {
-      throw new BadRequestException(`템플릿 #${id}에 카테고리가 설정되어 있지 않아 파라미터 맵을 업데이트할 수 없습니다.`);
+      throw new BadRequestException(
+        `템플릿 #${id}에 카테고리가 설정되어 있지 않아 파라미터 맵을 업데이트할 수 없습니다.`,
+      );
     }
 
-    const validatedParameterMap = await this.validateParameterMap(parameterMap, existingTemplate.category);
+    const validatedParameterMap = await this.validateParameterMap(
+      parameterMap,
+      existingTemplate.category,
+    );
 
     existingTemplate.parameter_map = validatedParameterMap;
-    
+
     return this.workflowRepository.save(existingTemplate);
   }
 
@@ -114,9 +130,13 @@ export class WorkflowService {
   }
 
   async findOneTemplateById(id: number): Promise<Workflow> {
-    const template = await this.workflowRepository.findOne({ where: { id, isTemplate: true } });
+    const template = await this.workflowRepository.findOne({
+      where: { id, isTemplate: true },
+    });
     if (!template) {
-      throw new NotFoundException(`Workflow template with ID #${id} not found.`);
+      throw new NotFoundException(
+        `Workflow template with ID #${id} not found.`,
+      );
     }
     return template;
   }

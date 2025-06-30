@@ -26,7 +26,12 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'audio', 'text-to-image', 'image-to-video'],
     default_value: -1,
     validation: { min: -1, max: 18446744073709551615, step: 1 },
-    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: [
+      'image',
+      'video',
+      'text-to-image',
+      'image-to-video',
+    ],
   },
   {
     key: 'batch_size',
@@ -36,7 +41,12 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
     default_value: 1,
     validation: { min: 1, max: 16, step: 1 },
-    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: [
+      'image',
+      'video',
+      'text-to-image',
+      'image-to-video',
+    ],
   },
 
   // --- Text & Image & Video Common Parameters ---
@@ -46,7 +56,12 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'textarea',
     description: '생성할 결과물의 주된 내용을 상세히 기술합니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
-    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: [
+      'image',
+      'video',
+      'text-to-image',
+      'image-to-video',
+    ],
   },
   {
     key: 'negative_prompt',
@@ -54,7 +69,12 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'textarea',
     description: '결과물에서 피하고 싶은 요소를 기술합니다.',
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
-    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: [
+      'image',
+      'video',
+      'text-to-image',
+      'image-to-video',
+    ],
   },
   {
     key: 'cfg',
@@ -80,7 +100,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     key: 'denoise',
     label: 'Denoise',
     type: 'number',
-    description: '이미지 생성 과정에서 노이즈를 얼마나 제거하고 원본을 따를지 결정합니다. (0.0 ~ 1.0)',
+    description:
+      '이미지 생성 과정에서 노이즈를 얼마나 제거하고 원본을 따를지 결정합니다. (0.0 ~ 1.0)',
     categories: ['image', 'text-to-image', 'image-to-video'],
     default_value: 1.0,
     validation: { min: 0, max: 1, step: 0.05 },
@@ -95,7 +116,12 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
     default_value: 1024,
     validation: { min: 64, max: 4096, step: 8 },
-    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: [
+      'image',
+      'video',
+      'text-to-image',
+      'image-to-video',
+    ],
   },
   {
     key: 'height',
@@ -105,9 +131,14 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     categories: ['image', 'video', 'text-to-image', 'image-to-video'],
     default_value: 1024,
     validation: { min: 64, max: 4096, step: 8 },
-    essentialForCategories: ['image', 'video', 'text-to-image', 'image-to-video'],
+    essentialForCategories: [
+      'image',
+      'video',
+      'text-to-image',
+      'image-to-video',
+    ],
   },
-  
+
   // --- Sampler & Scheduler ---
   {
     key: 'sampler_name',
@@ -115,7 +146,14 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     type: 'select',
     description: '생성에 사용할 샘플링 방식을 선택합니다.',
     categories: ['image', 'video', 'text-to-image'],
-    options: ['euler', 'euler_ancestral', 'dpmpp_2m', 'dpmpp_sde', 'dpmpp_2m_sde', 'lcm'],
+    options: [
+      'euler',
+      'euler_ancestral',
+      'dpmpp_2m',
+      'dpmpp_sde',
+      'dpmpp_2m_sde',
+      'lcm',
+    ],
   },
   {
     key: 'scheduler',
@@ -159,7 +197,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     key: 'crf',
     label: 'CRF (Constant Rate Factor)',
     type: 'number',
-    description: '비디오 압축 품질을 제어합니다. 낮을수록 품질이 높습니다. (권장: 18-28)',
+    description:
+      '비디오 압축 품질을 제어합니다. 낮을수록 품질이 높습니다. (권장: 18-28)',
     categories: ['video', 'image-to-video'],
     default_value: 23,
     validation: { min: 0, max: 51, step: 1 },
@@ -168,7 +207,8 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     key: 'pingpong',
     label: 'Ping-Pong Effect',
     type: 'boolean',
-    description: '비디오를 정방향 재생 후 역방향으로 재생하는 핑퐁 효과를 적용합니다.',
+    description:
+      '비디오를 정방향 재생 후 역방향으로 재생하는 핑퐁 효과를 적용합니다.',
     categories: ['video', 'image-to-video'],
   },
   {
@@ -208,4 +248,6 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
   },
 ];
 
-export const WORKFLOW_CATEGORIES = [...new Set(PARAMETER_PRESETS.flatMap(p => p.categories))];
+export const WORKFLOW_CATEGORIES = [
+  ...new Set(PARAMETER_PRESETS.flatMap((p) => p.categories)),
+];
