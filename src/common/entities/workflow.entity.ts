@@ -9,7 +9,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { WorkflowParameterMappingItem } from '../interfaces/workflow.interface';
+import { WorkflowParameterMappingItemDTO } from '../dto/workflow/workflow-parameter-mapping-item.dto';
 import { User } from './user.entity';
 
 @Entity('workflows') // 테이블명
@@ -23,6 +23,9 @@ export class Workflow {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true, comment: 'Category of the workflow template (e.g., image, video)' })
+  category?: string;
+
   @Column({
     type: 'jsonb',
     nullable: true,
@@ -35,7 +38,7 @@ export class Workflow {
     nullable: true,
     comment: 'Parameter mapping for the template',
   })
-  parameter_map?: Record<string, WorkflowParameterMappingItem>; // ✨ 임포트한 인터페이스 사용
+  parameter_map?: Record<string, WorkflowParameterMappingItemDTO>; // 타입을 DTO와 일치시킴
 
   @Column({ type: 'text', nullable: true })
   previewImageUrl?: string; // 템플릿 미리보기 이미지 URL

@@ -14,6 +14,12 @@ export class WorkflowTemplateResponseDTO {
   })
   description?: string;
 
+  @ApiPropertyOptional({
+    example: 'image',
+    description: '워크플로우 카테고리',
+  })
+  category?: string;
+
   @ApiProperty({
     type: 'object',
     description: 'ComfyUI 워크플로우 원본 JSON 정의',
