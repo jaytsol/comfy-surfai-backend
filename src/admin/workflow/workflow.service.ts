@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { Workflow } from 'src/common/entities/workflow.entity';
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto';
+import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
 import { plainToInstance } from 'class-transformer';
 import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { validate } from 'class-validator';
@@ -120,6 +121,36 @@ export class WorkflowService {
     existingTemplate.parameter_map = validatedParameterMap;
 
     return this.workflowRepository.save(existingTemplate);
+  }
+
+  async updateTemplate(
+    id: number,
+    updateDTO: UpdateWorkflowTemplateDTO,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    adminUserId: number,
+  ): Promise<Workflow> {
+    const existingTemplate = await this.findOneTemplateById(id);
+
+    // 카테고리가 DTO에 포함되어 있고, 기존 값과 다른 경우에만 사용
+    const categoryForValidation =
+      updateDTO.category || existingTemplate.category;
+    if (!categoryForValidation) {
+      throw new BadRequestException('템플릿의 카테고리가 지정되지 않았습니다.');
+    }
+
+    if (updateDTO.parameter_map) {
+      updateDTO.parameter_map = await this.validateParameterMap(
+        updateDTO.parameter_map,
+        categoryForValidation,
+      );
+    }
+
+    const updatedTemplate = this.workflowRepository.merge(
+      existingTemplate,
+      updateDTO,
+    );
+
+    return this.workflowRepository.save(updatedTemplate);
   }
 
   async findAllTemplates(): Promise<Workflow[]> {

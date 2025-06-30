@@ -13,12 +13,14 @@ import {
   Delete,
   Query,
   Put,
+  Patch,
 } from '@nestjs/common';
 import { WorkflowService } from './workflow.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto';
+import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
 import { WorkflowTemplateResponseDTO } from 'src/common/dto/workflow/workflow-template.response.dto';
 import {
   ApiTags,
@@ -40,7 +42,6 @@ import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflo
 export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
 
-  // --- 사전 설정 및 카테고리 API ---
   @Get('parameter-presets')
   @ApiOperation({ summary: '파라미터 사전 설정 목록 조회' })
   getParameterPresets(@Query('category') category?: string): ParameterPreset[] {
@@ -53,7 +54,6 @@ export class WorkflowController {
     return this.workflowService.getWorkflowCategories();
   }
 
-  // --- 1단계: 워크플로우 템플릿 뼈대 생성 ---
   @Post()
   @ApiOperation({ summary: '1단계: 새 워크플로우 템플릿 생성 (뼈대)' })
   @ApiResponse({ status: 201, type: WorkflowTemplateResponseDTO })
@@ -69,7 +69,6 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(newTemplate);
   }
 
-  // --- 2단계: 파라미터 맵 설정 ---
   @Put(':id/parameter-map')
   @ApiOperation({ summary: '2단계: 워크플로우 템플릿의 파라미터 맵 설정' })
   @ApiBody({
@@ -95,6 +94,23 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(updatedTemplate);
   }
 
+  @Patch(':id')
+  @ApiOperation({ summary: '전체 워크플로우 템플릿 정보 수정 (편집 페이지용)' })
+  @ApiResponse({ status: 200, type: WorkflowTemplateResponseDTO })
+  async updateTemplate(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDTO: UpdateWorkflowTemplateDTO,
+    @Request() req,
+  ): Promise<WorkflowTemplateResponseDTO> {
+    const adminUserId = req.user.id;
+    const updatedTemplate = await this.workflowService.updateTemplate(
+      id,
+      updateDTO,
+      adminUserId,
+    );
+    return this.mapWorkflowToResponseDTO(updatedTemplate);
+  }
+
   // --- 전체 목록 및 단일 조회 ---
   @Get()
   @ApiOperation({ summary: '모든 워크플로우 템플릿 목록 조회' })
@@ -112,7 +128,6 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(template);
   }
 
-  // --- 삭제 ---
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '워크플로우 템플릿 삭제' })
@@ -124,7 +139,6 @@ export class WorkflowController {
     await this.workflowService.removeTemplate(id, adminUserId);
   }
 
-  // --- DTO 매퍼 ---
   private mapWorkflowToResponseDTO(
     workflow: Workflow,
   ): WorkflowTemplateResponseDTO {

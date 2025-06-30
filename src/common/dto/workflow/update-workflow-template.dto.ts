@@ -1,6 +1,11 @@
-import { PartialType } from '@nestjs/swagger'; // 또는 @nestjs/mapped-types 에서 가져올 수 있습니다.
+import { PartialType } from '@nestjs/swagger';
 import { CreateWorkflowTemplateDTO } from './create-workflow-template.dto';
+import { IsObject, IsOptional } from 'class-validator';
 
 export class UpdateWorkflowTemplateDTO extends PartialType(
   CreateWorkflowTemplateDTO,
-) {}
+) {
+  @IsObject()
+  @IsOptional()
+  parameter_map?: Record<string, any>;
+}
