@@ -47,19 +47,23 @@ export class CreateWorkflowTemplateDTO {
     description: '동적 파라미터와 실제 워크플로우 노드/입력 매핑 정보',
     type: 'object',
     additionalProperties: {
-      $ref: '#/components/schemas/WorkflowParameterMappingItemDto',
+      $ref: '#/components/schemas/WorkflowParameterMappingItemDTO',
     },
     example: {
       positive_prompt: {
         node_id: '6',
         input_name: 'text',
+        label: 'Positive Prompt',
         description: '이미지의 주요 요소를 설명합니다. 상세할수록 좋습니다.',
+        type: 'textarea',
       },
       seed: {
         node_id: '3',
         input_name: 'seed',
+        label: 'Seed',
         description:
           '이미지 생성의 무작위성을 제어하는 시드 값입니다. -1로 설정하면 랜덤 시드가 사용됩니다.',
+        type: 'number',
       },
     },
   })

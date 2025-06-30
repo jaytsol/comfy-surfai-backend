@@ -35,7 +35,7 @@ export interface WorkflowTemplate {
   name: string;
   description?: string;
   /**
-   * ComfyUI의 원�� 워크플로우 API 포맷 JSON 객체입니다.
+   * ComfyUI의 워크플로우 API 포맷 JSON 객체입니다.
    */
   definition: object;
   /**
