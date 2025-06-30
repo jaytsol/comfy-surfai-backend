@@ -26,10 +26,9 @@ export class ParameterValidationDTO {
   @IsOptional()
   min?: number;
 
-  @ApiPropertyOptional({ description: '최대값', type: Number })
-  @IsNumber()
+  @ApiPropertyOptional({ description: '최대값', type: 'string' })
   @IsOptional()
-  max?: number;
+  max?: number | string;
 
   @ApiPropertyOptional({ description: '증감 단위', type: Number })
   @IsNumber()

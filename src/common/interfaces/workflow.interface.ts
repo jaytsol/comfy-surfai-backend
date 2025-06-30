@@ -20,7 +20,7 @@ export interface WorkflowParameterMappingItem {
   validation?: {
     required?: boolean;
     min?: number;
-    max?: number;
+    max?: number | string;
     step?: number;
   };
 }
