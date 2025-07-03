@@ -149,6 +149,7 @@ export class GeneratedOutputController {
     dto.usedParameters = output.usedParameters;
     dto.createdAt = output.createdAt;
     dto.promptId = output.promptId;
+    dto.duration = output.duration;
     return dto;
   }
 }

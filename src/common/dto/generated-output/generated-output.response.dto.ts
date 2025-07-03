@@ -38,4 +38,10 @@ export class GeneratedOutputResponseDTO {
 
   @ApiProperty({ description: '이 결과물을 생성한 ComfyUI 작업의 고유 ID' })
   promptId: string;
+
+  @ApiPropertyOptional({
+    description: '생성에 소요된 시간 (초)',
+    example: 15.72,
+  })
+  duration?: number;
 }

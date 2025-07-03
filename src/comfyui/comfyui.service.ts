@@ -48,6 +48,7 @@ export class ComfyUIService implements OnModuleInit {
     {
       userId: number;
       templateId: number;
+      startTime: number; // 생성 시작 시간
       parameters?: Record<string, any>; // 사용된 파라미터도 함께 저장
     }
   >();
@@ -166,6 +167,12 @@ export class ComfyUIService implements OnModuleInit {
 
     const { prompt_id, output } = messageData;
 
+    // ✨ 생성 소요 시간 계산
+    const metadata = this.promptMetadata.get(prompt_id);
+    const durationInSeconds = metadata?.startTime
+      ? (Date.now() - metadata.startTime) / 1000
+      : undefined;
+
     // ✨ --- 이미지와 비디오(gifs)를 모두 처리하도록 로직 확장 --- ✨
     // 1. 이미지 결과물 목록을 가져옵니다. (없으면 빈 배열)
     const imageOutputs =
@@ -212,6 +219,7 @@ export class ComfyUIService implements OnModuleInit {
           ownerUserId: userId,
           sourceWorkflowId: templateId,
           usedParameters: usedParameters,
+          duration: durationInSeconds,
         };
         return await this.generatedOutputService.create(createOutputDTO);
       } catch (error) {
@@ -243,6 +251,7 @@ export class ComfyUIService implements OnModuleInit {
             mimeType: output.mimeType,
             createdAt: output.createdAt.toISOString(),
             usedParameters: output.usedParameters,
+            duration: output.duration,
           };
         }),
       );
@@ -349,6 +358,7 @@ export class ComfyUIService implements OnModuleInit {
         this.promptMetadata.set(result.prompt_id, {
           userId: adminUserId,
           templateId: generateDTO.templateId,
+          startTime: Date.now(), // 생성 시작 시간 기록
           parameters: finalParameters,
         });
         console.log(
