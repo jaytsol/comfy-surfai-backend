@@ -7,7 +7,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import axios from 'axios';
-import * as fs from 'fs';
 import FormData from 'form-data';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -294,18 +293,18 @@ export class ComfyUIService implements OnModuleInit {
     return Buffer.from(response.data);
   }
 
-  private async uploadImageToComfyUI(
-    imageFileName: string,
+  private async uploadBase64ImageToComfyUI(
+    base64Image: string,
   ): Promise<{ name: string; subfolder: string; type: string }> {
-    const imagePath = `/app/data/input/${imageFileName}`;
-    const stats = await fs.promises.stat(imagePath);
-    if (!stats.isFile()) {
-      throw new InternalServerErrorException(
-        `Input image not found: ${imageFileName}`,
-      );
-    }
+    // "data:image/png;base64," 와 같은 Data URL 헤더를 제거합니다.
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
     const formData = new FormData();
-    formData.append('image', fs.createReadStream(imagePath));
+    // 파일 이름은 임의로 생성하거나, MIME 타입에서 확장자를 유추하여 사용합니다.
+    // 여기서는 간단하게 UUID를 사용하고, ComfyUI가 파일 확장자를 자동으로 처리하도록 합니다.
+    const filename = `input_${uuidv4()}.png`; // 또는 mime-type.util을 사용하여 확장자 유추
+    formData.append('image', imageBuffer, { filename: filename });
     formData.append('overwrite', 'true');
 
     try {
@@ -356,6 +355,27 @@ export class ComfyUIService implements OnModuleInit {
     // 최종적으로 사용될 파라미터를 저장할 객체
     const finalParameters = { ...generateDTO.parameters };
 
+    // inputImage가 제공되면 ComfyUI에 업로드하고, 그 파일명을 input_image 파라미터로 사용
+    let uploadedInputImageName: string | undefined;
+    if (generateDTO.inputImage) {
+      try {
+        const uploadedImage = await this.uploadBase64ImageToComfyUI(
+          generateDTO.inputImage,
+        );
+        uploadedInputImageName = uploadedImage.name;
+        console.log(
+          `[ComfyUIService] Uploaded input image to ComfyUI: ${uploadedInputImageName}`,
+        );
+      } catch (error) {
+        console.error(
+          `[ComfyUIService] Failed to upload input image: ${error.message}`,
+        );
+        throw new InternalServerErrorException(
+          '입력 이미지 업로드에 실패했습니다.',
+        );
+      }
+    }
+
     if (generateDTO.parameters && parameterMap) {
       const unknownParams = Object.keys(generateDTO.parameters).filter(
         (p) => !Object.hasOwn(parameterMap, p),
@@ -373,10 +393,9 @@ export class ComfyUIService implements OnModuleInit {
         if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
           let finalValue = paramValue;
 
-          // 이미지 파라미터 처리
-          if (paramKey === 'input_image' && typeof finalValue === 'string') {
-            const uploadedImage = await this.uploadImageToComfyUI(finalValue);
-            finalValue = uploadedImage.name;
+          // input_image 파라미터가 있고, 이미 업로드된 이미지가 있다면 그 파일명을 사용
+          if (paramKey === 'input_image' && uploadedInputImageName) {
+            finalValue = uploadedInputImageName;
           }
 
           if (paramKey === 'seed' && Number(finalValue) === -1) {
