@@ -12,7 +12,7 @@ export interface WorkflowParameterMappingItem {
   // 2. UI 렌더링을 위한 정보
   label: string;
   description?: string;
-  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean';
+  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'image';
   default_value?: any;
   options?: string[];
 
