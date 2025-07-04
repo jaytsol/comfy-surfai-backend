@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import axios from 'axios';
+import FormData from 'form-data';
 import { ConfigService } from '@nestjs/config';
 import {
   ComfyUIInput,
@@ -48,6 +49,7 @@ export class ComfyUIService implements OnModuleInit {
     {
       userId: number;
       templateId: number;
+      startTime: number; // 생성 시작 시간
       parameters?: Record<string, any>; // 사용된 파라미터도 함께 저장
     }
   >();
@@ -166,6 +168,12 @@ export class ComfyUIService implements OnModuleInit {
 
     const { prompt_id, output } = messageData;
 
+    // ✨ 생성 소요 시간 계산
+    const metadata = this.promptMetadata.get(prompt_id);
+    const durationInSeconds = metadata?.startTime
+      ? (Date.now() - metadata.startTime) / 1000
+      : undefined;
+
     // ✨ --- 이미지와 비디오(gifs)를 모두 처리하도록 로직 확장 --- ✨
     // 1. 이미지 결과물 목록을 가져옵니다. (없으면 빈 배열)
     const imageOutputs =
@@ -212,6 +220,7 @@ export class ComfyUIService implements OnModuleInit {
           ownerUserId: userId,
           sourceWorkflowId: templateId,
           usedParameters: usedParameters,
+          duration: durationInSeconds,
         };
         return await this.generatedOutputService.create(createOutputDTO);
       } catch (error) {
@@ -243,6 +252,7 @@ export class ComfyUIService implements OnModuleInit {
             mimeType: output.mimeType,
             createdAt: output.createdAt.toISOString(),
             usedParameters: output.usedParameters,
+            duration: output.duration,
           };
         }),
       );
@@ -283,6 +293,40 @@ export class ComfyUIService implements OnModuleInit {
     return Buffer.from(response.data);
   }
 
+  private async uploadBase64ImageToComfyUI(
+    base64Image: string,
+  ): Promise<{ name: string; subfolder: string; type: string }> {
+    // "data:image/png;base64," 와 같은 Data URL 헤더를 제거합니다.
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    const formData = new FormData();
+    // 파일 이름은 임의로 생성하거나, MIME 타입에서 확장자를 유추하여 사용합니다.
+    // 여기서는 간단하게 UUID를 사용하고, ComfyUI가 파일 확장자를 자동으로 처리하도록 합니다.
+    const filename = `input_${uuidv4()}.png`; // 또는 mime-type.util을 사용하여 확장자 유추
+    formData.append('image', imageBuffer, { filename: filename });
+    formData.append('overwrite', 'true');
+
+    try {
+      const response = await axios.post(
+        `${this.comfyuiUrl}/upload/image`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: this.authHeader,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading image to ComfyUI:', error);
+      throw new InternalServerErrorException(
+        'Failed to upload image to ComfyUI',
+      );
+    }
+  }
+
   private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
     // WebSocket 연결과 동일한 client_id를 사용하여 HTTP 요청과 WebSocket 세션을 연결
     return {
@@ -307,9 +351,30 @@ export class ComfyUIService implements OnModuleInit {
     const modifiedDefinition: ComfyUIInput = JSON.parse(
       JSON.stringify(baseDefinition),
     );
-    
+
     // 최종적으로 사용될 파라미터를 저장할 객체
     const finalParameters = { ...generateDTO.parameters };
+
+    // inputImage가 제공되면 ComfyUI에 업로드하고, 그 파일명을 input_image 파라미터로 사용
+    let uploadedInputImageName: string | undefined;
+    if (generateDTO.inputImage) {
+      try {
+        const uploadedImage = await this.uploadBase64ImageToComfyUI(
+          generateDTO.inputImage,
+        );
+        uploadedInputImageName = uploadedImage.name;
+        console.log(
+          `[ComfyUIService] Uploaded input image to ComfyUI: ${uploadedInputImageName}`,
+        );
+      } catch (error) {
+        console.error(
+          `[ComfyUIService] Failed to upload input image: ${error.message}`,
+        );
+        throw new InternalServerErrorException(
+          '입력 이미지 업로드에 실패했습니다.',
+        );
+      }
+    }
 
     if (generateDTO.parameters && parameterMap) {
       const unknownParams = Object.keys(generateDTO.parameters).filter(
@@ -327,12 +392,17 @@ export class ComfyUIService implements OnModuleInit {
         const mappingInfo = parameterMap[paramKey];
         if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
           let finalValue = paramValue;
-          // seed가 -1이면 (숫자 또는 문자열) 랜덤 값으로 교체
+
+          // input_image 파라미터가 있고, 이미 업로드된 이미지가 있다면 그 파일명을 사용
+          if (paramKey === 'input_image' && uploadedInputImageName) {
+            finalValue = uploadedInputImageName;
+          }
+
           if (paramKey === 'seed' && Number(finalValue) === -1) {
-            // ComfyUI의 최대 seed 값 범위 내에서 랜덤 정수 생성
-            finalValue = Math.floor(Math.random() * 18446744073709551615);
-            console.log(`[ComfyUIService] Random seed generated: ${finalValue}`);
-            // 최종 파라미터 객체에도 업데이트
+            finalValue = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+            console.log(
+              `[ComfyUIService] Random seed generated: ${finalValue}`,
+            );
             finalParameters.seed = finalValue;
           }
           modifiedDefinition[mappingInfo.node_id].inputs[
@@ -350,7 +420,8 @@ export class ComfyUIService implements OnModuleInit {
         this.promptMetadata.set(result.prompt_id, {
           userId: adminUserId,
           templateId: generateDTO.templateId,
-          parameters: finalParameters, 
+          startTime: Date.now(), // 생성 시작 시간 기록
+          parameters: finalParameters,
         });
         console.log(
           `[ComfyUIService] Prompt #${result.prompt_id} metadata stored for user #${adminUserId}. Awaiting 'executed' message.`,

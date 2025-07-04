@@ -16,6 +16,7 @@ import {
   PARAMETER_PRESETS,
   WORKFLOW_CATEGORIES,
 } from 'src/common/constants/parameter-presets';
+import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.enum';
 
 @Injectable()
 export class WorkflowService {
@@ -26,7 +27,7 @@ export class WorkflowService {
 
   private async validateParameterMap(
     parameterMap: Record<string, any>,
-    category: string,
+    category: ParameterMapCategory,
   ): Promise<Record<string, WorkflowParameterMappingItemDTO>> {
     const validatedMap: Record<string, WorkflowParameterMappingItemDTO> = {};
     const keys = Object.keys(parameterMap);
@@ -80,7 +81,7 @@ export class WorkflowService {
     return WORKFLOW_CATEGORIES;
   }
 
-  getParameterPresets(category?: string): ParameterPreset[] {
+  getParameterPresets(category?: ParameterMapCategory): ParameterPreset[] {
     if (!category) return PARAMETER_PRESETS;
     return PARAMETER_PRESETS.filter((preset) =>
       preset.categories.includes(category),

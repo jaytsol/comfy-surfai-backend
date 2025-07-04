@@ -35,4 +35,8 @@ export class CreateGeneratedOutputDTO {
   @IsObject()
   @IsOptional()
   usedParameters?: Record<string, any>;
+
+  @IsNumber()
+  @IsOptional()
+  duration?: number;
 }

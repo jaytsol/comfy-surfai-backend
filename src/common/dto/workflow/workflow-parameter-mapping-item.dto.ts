@@ -74,11 +74,11 @@ export class WorkflowParameterMappingItemDTO {
 
   @ApiProperty({
     description: 'UI 입력 필드 타입',
-    enum: ['text', 'number', 'textarea', 'select', 'boolean'],
+    enum: ['text', 'number', 'textarea', 'select', 'boolean', 'image'],
     example: 'textarea',
   })
-  @IsEnum(['text', 'number', 'textarea', 'select', 'boolean'])
-  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean';
+  @IsEnum(['text', 'number', 'textarea', 'select', 'boolean', 'image'])
+  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'image';
 
   @ApiPropertyOptional({
     description: '필드의 기본값',

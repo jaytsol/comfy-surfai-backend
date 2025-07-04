@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { WorkflowParameterMappingItemDTO } from '../dto/workflow/workflow-parameter-mapping-item.dto';
 import { User } from './user.entity';
+import { ParameterMapCategory } from '../enums/parameter-map-category.enum';
 
 @Entity('workflows') // 테이블명
 export class Workflow {
@@ -23,8 +24,13 @@ export class Workflow {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: true, comment: 'Category of the workflow template (e.g., image, video)' })
-  category?: string;
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    comment: 'Category of the workflow template (e.g., image, video)',
+  })
+  category?: ParameterMapCategory;
 
   @Column({
     type: 'jsonb',

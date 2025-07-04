@@ -1,4 +1,4 @@
-// src/common/enums/role.enum.ts (또는 적절한 공통 위치)
+// src/common/enums/role.enum.ts
 export enum Role {
   User = 'user',
   Admin = 'admin',

@@ -5,6 +5,7 @@ import {
   IsObject,
   IsOptional,
   Min,
+  IsString,
 } from 'class-validator';
 
 export class GenerateImageDTO {
@@ -37,4 +38,14 @@ export class GenerateImageDTO {
   // 더 엄격한 타입을 원한다면, 각 파라미터 타입을 개별적으로 정의하는 복잡한 DTO를 만들거나
   // value_type과 함께 커스텀 유효성 검사기를 사용할 수 있습니다.
   // 현재는 Record<string, any>로 유연하게 처리합니다.
+
+  @ApiPropertyOptional({
+    description: 'Base64 인코딩된 입력 이미지 데이터 (선택 사항)',
+    type: 'string',
+    format: 'base64',
+    example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==',
+  })
+  @IsString({ message: 'inputImage는 Base64 문자열이어야 합니다.' })
+  @IsOptional()
+  inputImage?: string;
 }

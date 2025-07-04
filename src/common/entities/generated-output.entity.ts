@@ -58,6 +58,13 @@ export class GeneratedOutput {
   })
   usedParameters?: Record<string, any>;
 
+  @Column({
+    type: 'float',
+    nullable: true,
+    comment: '생성에 소요된 시간 (초)',
+  })
+  duration?: number;
+
   @CreateDateColumn({ type: 'timestamptz' }) // 타임존 포함
   createdAt: Date;
 }
