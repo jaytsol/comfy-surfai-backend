@@ -7,6 +7,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import axios from 'axios';
+import * as fs from 'fs';
+import FormData from 'form-data';
 import { ConfigService } from '@nestjs/config';
 import {
   ComfyUIInput,
@@ -292,6 +294,40 @@ export class ComfyUIService implements OnModuleInit {
     return Buffer.from(response.data);
   }
 
+  private async uploadImageToComfyUI(
+    imageFileName: string,
+  ): Promise<{ name: string; subfolder: string; type: string }> {
+    const imagePath = `/app/data/input/${imageFileName}`;
+    const stats = await fs.promises.stat(imagePath);
+    if (!stats.isFile()) {
+      throw new InternalServerErrorException(
+        `Input image not found: ${imageFileName}`,
+      );
+    }
+    const formData = new FormData();
+    formData.append('image', fs.createReadStream(imagePath));
+    formData.append('overwrite', 'true');
+
+    try {
+      const response = await axios.post(
+        `${this.comfyuiUrl}/upload/image`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: this.authHeader,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading image to ComfyUI:', error);
+      throw new InternalServerErrorException(
+        'Failed to upload image to ComfyUI',
+      );
+    }
+  }
+
   private createComfyUIRequest(workflow: ComfyUIInput): ComfyUIRequest {
     // WebSocket 연결과 동일한 client_id를 사용하여 HTTP 요청과 WebSocket 세션을 연결
     return {
@@ -336,6 +372,13 @@ export class ComfyUIService implements OnModuleInit {
         const mappingInfo = parameterMap[paramKey];
         if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
           let finalValue = paramValue;
+
+          // 이미지 파라미터 처리
+          if (paramKey === 'input_image' && typeof finalValue === 'string') {
+            const uploadedImage = await this.uploadImageToComfyUI(finalValue);
+            finalValue = uploadedImage.name;
+          }
+
           if (paramKey === 'seed' && Number(finalValue) === -1) {
             finalValue = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
             console.log(

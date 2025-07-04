@@ -5,7 +5,7 @@ import { ParameterMapCategory } from '../enums/parameter-map-category.enum';
 export interface ParameterPreset {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean';
+  type: 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'image';
   description: string;
   categories: ParameterMapCategory[];
   options?: string[];
@@ -319,7 +319,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
   {
     key: 'input_image',
     label: 'Input Image',
-    type: 'text',
+    type: 'image',
     description: '비디오 생성의 기반이 될 이미지입니다.',
     categories: [
       ParameterMapCategory.image_to_image,
