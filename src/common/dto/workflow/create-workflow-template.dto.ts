@@ -9,6 +9,7 @@ import {
   IsUrl,
   IsDefined,
 } from 'class-validator';
+import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.enum';
 
 export class CreateWorkflowTemplateDTO {
   @ApiProperty({
@@ -33,7 +34,7 @@ export class CreateWorkflowTemplateDTO {
   })
   @IsString()
   @IsNotEmpty()
-  category: string;
+  category: ParameterMapCategory;
 
   @ApiProperty({
     description: 'ComfyUI 워크플로우 원본 JSON 정의',

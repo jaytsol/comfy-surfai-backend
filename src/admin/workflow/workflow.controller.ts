@@ -33,6 +33,7 @@ import { Workflow } from 'src/common/entities/workflow.entity';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { ParameterPreset } from 'src/common/constants/parameter-presets';
 import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.enum';
 
 @ApiTags('Admin - Workflow Templates')
 @ApiCookieAuth()
@@ -44,7 +45,9 @@ export class WorkflowController {
 
   @Get('parameter-presets')
   @ApiOperation({ summary: '파라미터 사전 설정 목록 조회' })
-  getParameterPresets(@Query('category') category?: string): ParameterPreset[] {
+  getParameterPresets(
+    @Query('category') category?: ParameterMapCategory,
+  ): ParameterPreset[] {
     return this.workflowService.getParameterPresets(category);
   }
 
