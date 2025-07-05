@@ -34,7 +34,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
     default_value: -1,
     validation: {
       min: -1,
-      max: '18446744073709551615', // 문자열로 처리하여 정밀도 손실 방지
+      max: '9007199254740991', // 문자열로 처리하여 정밀도 손실 방지
       step: 1,
     },
     essentialForCategories: [
@@ -112,7 +112,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       ParameterMapCategory.image_to_video,
     ],
     default_value: 7,
-    validation: { min: 0, max: 20, step: 0.5 },
+    validation: { min: 1, max: 16, step: 1 },
     essentialForCategories: [
       ParameterMapCategory.text_to_image,
       ParameterMapCategory.text_to_video,
@@ -132,7 +132,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       ParameterMapCategory.image_to_video,
     ],
     default_value: 25,
-    validation: { min: 1, max: 100, step: 1 },
+    validation: { min: 1, max: 36, step: 1 },
     essentialForCategories: [
       ParameterMapCategory.text_to_image,
       ParameterMapCategory.text_to_video,
@@ -168,7 +168,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       ParameterMapCategory.video_to_video,
     ],
     default_value: 1024,
-    validation: { min: 64, max: 4096, step: 8 },
+    validation: { min: 512, max: 2048, step: 8 },
     essentialForCategories: [
       ParameterMapCategory.text_to_image,
       ParameterMapCategory.text_to_video,
@@ -190,7 +190,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       ParameterMapCategory.video_to_video,
     ],
     default_value: 1024,
-    validation: { min: 64, max: 4096, step: 8 },
+    validation: { min: 512, max: 2048, step: 8 },
     essentialForCategories: [
       ParameterMapCategory.text_to_image,
       ParameterMapCategory.text_to_video,
@@ -328,7 +328,7 @@ export const PARAMETER_PRESETS: ParameterPreset[] = [
       ParameterMapCategory.image_to_video,
       ParameterMapCategory.video_to_video,
     ],
-    validation: { min: 1, step: 1 },
+    validation: { min: 1, max: 241, step: 1 },
     essentialForCategories: [
       ParameterMapCategory.text_to_video,
       ParameterMapCategory.image_to_video,
