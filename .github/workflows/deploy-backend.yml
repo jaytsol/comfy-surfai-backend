@@ -26,6 +26,12 @@ jobs:
       - name: Setup gcloud CLI
         uses: 'google-github-actions/setup-gcloud@v2'
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test
+
       - name: Build and Push Docker image
         run: |-
           gcloud builds submit --config cloudbuild.yaml \
