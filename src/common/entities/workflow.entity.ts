@@ -13,13 +13,13 @@ import { WorkflowParameterMappingItemDTO } from '../dto/workflow/workflow-parame
 import { User } from './user.entity';
 import { ParameterMapCategory } from '../enums/parameter-map-category.enum';
 
-@Entity('workflows') // 테이블명
+@Entity('workflows')
 export class Workflow {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  name: string; // 템플릿 이름 또는 "나만의 워크플로우" 이름
+  name: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -44,20 +44,19 @@ export class Workflow {
     nullable: true,
     comment: 'Parameter mapping for the template',
   })
-  parameter_map?: Record<string, WorkflowParameterMappingItemDTO>; // 타입을 DTO와 일치시킴
+  parameter_map?: Record<string, WorkflowParameterMappingItemDTO>;
 
   @Column({ type: 'text', nullable: true })
-  previewImageUrl?: string; // 템플릿 미리보기 이미지 URL
+  previewImageUrl?: string;
 
   @Column({ type: 'simple-array', nullable: true })
-  tags?: string[]; // 템플릿 분류용 태그
+  tags?: string[];
 
   @Column({
     default: false,
     comment: 'Is this template available to all users?',
   })
   isPublicTemplate: boolean;
-  // --- 템플릿 필드 끝 ---
 
   @Column({
     type: 'jsonb',
@@ -84,7 +83,7 @@ export class Workflow {
     nullable: true,
     onDelete: 'SET NULL',
     eager: false,
-  }) // 자기 참조 관계
+  })
   @JoinColumn({ name: 'sourceTemplateId' })
   sourceTemplate?: Workflow;
 
