@@ -41,20 +41,18 @@ export class ComfyUIService implements OnModuleInit {
   private comfyuiWsUrl: string;
   private authHeader: string;
   private ws: WebSocket;
-  public readonly client_id: string; // WebSocket 연결 식별용, Comfyui.controller.ts에서 Response에 포함
+  public readonly client_id: string;
 
-  // ✨ prompt_id를 키로, 생성 요청의 전체 컨텍스트를 저장합니다.
   private readonly promptMetadata = new Map<
     string,
     {
       userId: number;
       templateId: number;
-      startTime: number; // 생성 시작 시간
-      parameters?: Record<string, any>; // 사용된 파라미터도 함께 저장
+      startTime: number;
+      parameters?: Record<string, any>;
     }
   >();
 
-  // EventsGateway가 구독할 EventEmitter
   public readonly wsMessage$: EventEmitter = new EventEmitter();
 
   constructor(
@@ -197,7 +195,6 @@ export class ComfyUIService implements OnModuleInit {
 
     const uploadAndSavePromises = filesToProcess.map(async (fileInfo) => {
       try {
-        // 다운로드, R2 업로드, DB 저장 로직은 이미지/비디오 모두 동일하게 작동합니다.
         const fileBuffer = await this.downloadFromComfyUI(fileInfo);
 
         const r2FileName = `outputs/${userId}/${prompt_id}/${fileInfo.filename}`;
@@ -296,14 +293,11 @@ export class ComfyUIService implements OnModuleInit {
   private async uploadBase64ImageToComfyUI(
     base64Image: string,
   ): Promise<{ name: string; subfolder: string; type: string }> {
-    // "data:image/png;base64," 와 같은 Data URL 헤더를 제거합니다.
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
     const formData = new FormData();
-    // 파일 이름은 임의로 생성하거나, MIME 타입에서 확장자를 유추하여 사용합니다.
-    // 여기서는 간단하게 UUID를 사용하고, ComfyUI가 파일 확장자를 자동으로 처리하도록 합니다.
-    const filename = `input_${uuidv4()}.png`; // 또는 mime-type.util을 사용하여 확장자 유추
+    const filename = `input_${uuidv4()}.png`;
     formData.append('image', imageBuffer, { filename: filename });
     formData.append('overwrite', 'true');
 

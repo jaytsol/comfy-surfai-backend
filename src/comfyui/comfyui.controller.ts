@@ -21,7 +21,7 @@ import {
 import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
-@ApiCookieAuth() // 이 컨트롤러의 모든 API가 쿠키 인증을 필요로 함을 명시 (또는 각 메소드에 개별 적용)
+@ApiCookieAuth()
 @Controller('api')
 export class ComfyUIController {
   constructor(private readonly comfyuiService: ComfyUIService) {}
@@ -54,32 +54,27 @@ export class ComfyUIController {
     description: '요청한 템플릿 ID를 찾을 수 없음',
   })
   async generate(
-    @Body() generateDTO: GenerateImageDTO, // ✨ GenerateImageDTO 사용
+    @Body() generateDTO: GenerateImageDTO,
     @Request() req,
   ): Promise<any> {
-    // Promise<ComfyUIResult> 등으로 실제 반환 타입 명시
     const adminUserId = req.user.id;
     try {
       const result = await this.comfyuiService.generateImageFromTemplate(
         generateDTO,
         adminUserId,
       );
-      // 성공 응답 구조는 ComfyUI 실제 결과에 맞게 조정
       return {
         success: true,
-        message: 'ComfyUI 작업 요청 처리 중입니다.', // 서비스에서 구체적인 메시지 반환 가능
+        message: 'ComfyUI 작업 요청 처리 중입니다.',
         data: result,
         client_id: this.comfyuiService.client_id,
       };
     } catch (error) {
-      // 서비스에서 던져진 NotFoundException, InternalServerErrorException 등 다양한 예외 처리
-      // NestJS는 알려진 HTTP 예외는 자동으로 적절한 응답으로 변환합니다.
-      // 여기서 별도로 처리할 필요 없이 re-throw 하거나, 커스텀 로깅/변환이 필요하면 처리합니다.
       console.error(
         '[ComfyuiController] Image generation failed:',
         error.message,
       );
-      throw error; // 서비스에서 발생한 예외를 그대로 전달
+      throw error;
     }
   }
 }

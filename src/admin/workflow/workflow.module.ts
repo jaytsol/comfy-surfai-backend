@@ -1,17 +1,14 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // 👈 TypeOrmModule 임포트
-import { Workflow } from 'src/common/entities/workflow.entity'; // 👈 Workflow 엔티티 임포트 (경로 확인!)
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Workflow } from 'src/common/entities/workflow.entity';
 import { WorkflowService } from './workflow.service';
 import { WorkflowController } from './workflow.controller';
-import { AuthModule } from 'src/auth/auth.module'; // AuthModule이 필요하다면 임포트 유지
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Workflow]), // ✨ 이 부분을 추가해야 합니다!
-    AuthModule, // AuthModule에서 Guards 등을 export하여 사용한다면 필요합니다.
-  ],
+  imports: [TypeOrmModule.forFeature([Workflow]), AuthModule],
   controllers: [WorkflowController],
   providers: [WorkflowService],
-  exports: [WorkflowService], // 다른 모듈에서 WorkflowService를 사용한다면 export
+  exports: [WorkflowService],
 })
 export class WorkflowModule {}
