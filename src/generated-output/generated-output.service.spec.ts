@@ -21,6 +21,7 @@ import {
 describe('GeneratedOutputService (Unit Tests)', () => {
   let service: GeneratedOutputService;
   let outputRepository: Repository<GeneratedOutput>;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let workflowRepository: Repository<Workflow>;
   let storageService: IStorageService;
   let coinService: CoinService;
@@ -67,7 +68,11 @@ describe('GeneratedOutputService (Unit Tests)', () => {
       rollbackTransaction: jest.fn(),
       release: jest.fn(),
       manager: {
-        create: jest.fn().mockImplementation((entity, dto) => Object.assign(new entity(), dto)), // create는 dto를 그대로 반환하도록
+        create: jest
+          .fn()
+          .mockImplementation((entity, dto) =>
+            Object.assign(new entity(), dto),
+          ), // create는 dto를 그대로 반환하도록
         save: jest.fn().mockResolvedValue(mockGeneratedOutput), // save는 저장된 엔티티 반환
         findOne: jest.fn().mockResolvedValue(null), // 기본적으로 findOne은 null 반환
       },
@@ -425,12 +430,18 @@ describe('GeneratedOutputService (Unit Tests)', () => {
       expect(storageService.getSignedUrl).toHaveBeenCalledTimes(
         mockOutputs.length,
       );
-      expect(storageService.getSignedUrl).toHaveBeenCalledWith('r2/output1.png', {
-        expiresIn: 3600,
-      });
-      expect(storageService.getSignedUrl).toHaveBeenCalledWith('r2/output2.png', {
-        expiresIn: 3600,
-      });
+      expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+        'r2/output1.png',
+        {
+          expiresIn: 3600,
+        },
+      );
+      expect(storageService.getSignedUrl).toHaveBeenCalledWith(
+        'r2/output2.png',
+        {
+          expiresIn: 3600,
+        },
+      );
 
       expect(result.data.length).toBe(mockOutputs.length);
       expect(result.total).toBe(totalCount);
