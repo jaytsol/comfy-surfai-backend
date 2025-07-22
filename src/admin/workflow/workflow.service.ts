@@ -5,18 +5,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
-import { Workflow } from 'src/common/entities/workflow.entity';
-import { CreateWorkflowTemplateDTO } from 'src/common/dto/workflow/create-workflow-template.dto';
-import { UpdateWorkflowTemplateDTO } from 'src/common/dto/workflow/update-workflow-template.dto';
+import { Workflow } from '../../common/entities/workflow.entity';
+import { CreateWorkflowTemplateDTO } from '../../common/dto/workflow/create-workflow-template.dto';
+import { UpdateWorkflowTemplateDTO } from '../../common/dto/workflow/update-workflow-template.dto';
 import { plainToInstance } from 'class-transformer';
-import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
+import { WorkflowParameterMappingItemDTO } from '../../common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { validate } from 'class-validator';
 import {
   ParameterPreset,
   PARAMETER_PRESETS,
   WORKFLOW_CATEGORIES,
-} from 'src/common/constants/parameter-presets';
-import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.enum';
+} from '../../common/constants/parameter-presets';
+import { ParameterMapCategory } from '../../common/enums/parameter-map-category.enum';
 
 @Injectable()
 export class WorkflowService {

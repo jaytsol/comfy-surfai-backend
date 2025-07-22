@@ -69,6 +69,7 @@ describe('CoinService', () => {
                   }
                   return Promise.resolve(entity);
                 }),
+                create: jest.fn().mockImplementation((entity, dto) => dto),
               },
             }),
           },

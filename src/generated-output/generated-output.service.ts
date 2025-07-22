@@ -15,10 +15,10 @@ import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import * as path from 'path';
-import { CoinService } from 'src/coin/coin.service';
+import { CoinService } from '../coin/coin.service';
 import { CoinTransactionReason } from '@/common/entities/coin-transaction.entity';
-import { Workflow } from 'src/common/entities/workflow.entity';
-import { WorkflowService } from 'src/admin/workflow/workflow.service';
+import { Workflow } from '../common/entities/workflow.entity';
+import { WorkflowService } from '../admin/workflow/workflow.service';
 
 @Injectable()
 export class GeneratedOutputService {
