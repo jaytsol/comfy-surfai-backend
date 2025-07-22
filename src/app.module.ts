@@ -44,6 +44,7 @@ const configService = new ConfigService();
     WorkflowModule,
     StorageModule,
     AdminModule,
+    CoinModule, // CoinModule 추가
   ],
   controllers: [AppController, ComfyUIController],
   providers: [AppService, ComfyUIService, EventsGateway],
