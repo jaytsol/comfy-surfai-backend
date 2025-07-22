@@ -2,9 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CoinService } from './coin.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../common/entities/user.entity';
-import { CoinTransaction, CoinTransactionType, CoinTransactionReason } from '../common/entities/coin-transaction.entity';
+import {
+  CoinTransaction,
+  CoinTransactionType,
+  CoinTransactionReason,
+} from '../common/entities/coin-transaction.entity';
 import { Repository, DataSource } from 'typeorm';
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common'; // 추가
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common'; // 추가
 
 describe('CoinService', () => {
   let service: CoinService;
@@ -78,10 +85,20 @@ describe('CoinService', () => {
 
     // Mocking repository methods
     jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser);
-    jest.spyOn(userRepository, 'save').mockImplementation((user) => Promise.resolve(user as User));
-    jest.spyOn(coinTransactionRepository, 'create').mockImplementation((transaction) => transaction as CoinTransaction);
-    jest.spyOn(coinTransactionRepository, 'save').mockImplementation((transaction) => Promise.resolve(transaction as CoinTransaction));
-    jest.spyOn(coinTransactionRepository, 'find').mockResolvedValue([mockCoinTransaction]);
+    jest
+      .spyOn(userRepository, 'save')
+      .mockImplementation((user) => Promise.resolve(user as User));
+    jest
+      .spyOn(coinTransactionRepository, 'create')
+      .mockImplementation((transaction) => transaction as CoinTransaction);
+    jest
+      .spyOn(coinTransactionRepository, 'save')
+      .mockImplementation((transaction) =>
+        Promise.resolve(transaction as CoinTransaction),
+      );
+    jest
+      .spyOn(coinTransactionRepository, 'find')
+      .mockResolvedValue([mockCoinTransaction]);
   });
 
   it('should be defined', () => {
@@ -94,32 +111,53 @@ describe('CoinService', () => {
       const amountToAdd = 50;
       const reason = CoinTransactionReason.PROMOTION;
 
-      const updatedUser = await service.addCoins(mockUser.id, amountToAdd, reason);
+      const updatedUser = await service.addCoins(
+        mockUser.id,
+        amountToAdd,
+        reason,
+      );
 
       expect(updatedUser.coinBalance).toBe(initialBalance + amountToAdd);
-      expect(dataSource.createQueryRunner().startTransaction).toHaveBeenCalled();
-      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(expect.objectContaining({ ...mockUser, coinBalance: initialBalance + amountToAdd }));
-      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(expect.objectContaining({
-        userId: mockUser.id,
-        type: CoinTransactionType.GAIN,
-        amount: amountToAdd,
-        reason: reason,
-        currentBalance: initialBalance + amountToAdd,
-      }));
-      expect(dataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
+      expect(
+        dataSource.createQueryRunner().startTransaction,
+      ).toHaveBeenCalled();
+      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...mockUser,
+          coinBalance: initialBalance + amountToAdd,
+        }),
+      );
+      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: mockUser.id,
+          type: CoinTransactionType.GAIN,
+          amount: amountToAdd,
+          reason: reason,
+          currentBalance: initialBalance + amountToAdd,
+        }),
+      );
+      expect(
+        dataSource.createQueryRunner().commitTransaction,
+      ).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if amount is not positive', async () => {
-      await expect(service.addCoins(mockUser.id, 0, CoinTransactionReason.PROMOTION)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.addCoins(mockUser.id, 0, CoinTransactionReason.PROMOTION),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should rollback transaction on error', async () => {
-      jest.spyOn(dataSource.createQueryRunner().manager, 'save').mockRejectedValueOnce(new Error('DB error'));
+      jest
+        .spyOn(dataSource.createQueryRunner().manager, 'save')
+        .mockRejectedValueOnce(new Error('DB error'));
 
-      await expect(service.addCoins(mockUser.id, 50, CoinTransactionReason.PROMOTION)).rejects.toThrow(
-        InternalServerErrorException,
-      );
-      expect(dataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
+      await expect(
+        service.addCoins(mockUser.id, 50, CoinTransactionReason.PROMOTION),
+      ).rejects.toThrow(InternalServerErrorException);
+      expect(
+        dataSource.createQueryRunner().rollbackTransaction,
+      ).toHaveBeenCalled();
     });
   });
 
@@ -129,38 +167,73 @@ describe('CoinService', () => {
       const amountToDeduct = 30;
       const reason = CoinTransactionReason.IMAGE_GENERATION;
 
-      const updatedUser = await service.deductCoins(mockUser.id, amountToDeduct, reason);
+      const updatedUser = await service.deductCoins(
+        mockUser.id,
+        amountToDeduct,
+        reason,
+      );
 
       expect(updatedUser.coinBalance).toBe(100 - amountToDeduct);
-      expect(dataSource.createQueryRunner().startTransaction).toHaveBeenCalled();
-      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(expect.objectContaining({ ...mockUser, coinBalance: 100 - amountToDeduct }));
-      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(expect.objectContaining({
-        userId: mockUser.id,
-        type: CoinTransactionType.DEDUCT,
-        amount: amountToDeduct,
-        reason: reason,
-        currentBalance: 100 - amountToDeduct,
-      }));
-      expect(dataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
+      expect(
+        dataSource.createQueryRunner().startTransaction,
+      ).toHaveBeenCalled();
+      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...mockUser,
+          coinBalance: 100 - amountToDeduct,
+        }),
+      );
+      expect(dataSource.createQueryRunner().manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: mockUser.id,
+          type: CoinTransactionType.DEDUCT,
+          amount: amountToDeduct,
+          reason: reason,
+          currentBalance: 100 - amountToDeduct,
+        }),
+      );
+      expect(
+        dataSource.createQueryRunner().commitTransaction,
+      ).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if amount is not positive', async () => {
-      await expect(service.deductCoins(mockUser.id, 0, CoinTransactionReason.IMAGE_GENERATION)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.deductCoins(
+          mockUser.id,
+          0,
+          CoinTransactionReason.IMAGE_GENERATION,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if coin balance is insufficient', async () => {
       mockUser.coinBalance = 10; // Set insufficient balance
-      await expect(service.deductCoins(mockUser.id, 50, CoinTransactionReason.IMAGE_GENERATION)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.deductCoins(
+          mockUser.id,
+          50,
+          CoinTransactionReason.IMAGE_GENERATION,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should rollback transaction on error', async () => {
       mockUser.coinBalance = 100; // 충분한 잔액 설정
-      jest.spyOn(dataSource.createQueryRunner().manager, 'save').mockRejectedValueOnce(new Error('DB error'));
+      jest
+        .spyOn(dataSource.createQueryRunner().manager, 'save')
+        .mockRejectedValueOnce(new Error('DB error'));
 
-      await expect(service.deductCoins(mockUser.id, 50, CoinTransactionReason.IMAGE_GENERATION)).rejects.toThrow(
-        InternalServerErrorException,
-      );
-      expect(dataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
+      await expect(
+        service.deductCoins(
+          mockUser.id,
+          50,
+          CoinTransactionReason.IMAGE_GENERATION,
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+      expect(
+        dataSource.createQueryRunner().rollbackTransaction,
+      ).toHaveBeenCalled();
     });
   });
 
@@ -173,7 +246,9 @@ describe('CoinService', () => {
 
     it('should throw BadRequestException if user not found', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(null);
-      await expect(service.getBalance(999)).rejects.toThrow(BadRequestException);
+      await expect(service.getBalance(999)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

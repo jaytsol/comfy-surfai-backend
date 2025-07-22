@@ -17,6 +17,7 @@ import { GeneratedOutputModule } from './generated-output/generated-output.modul
 import { GeneratedOutput } from './common/entities/generated-output.entity';
 import { AdminModule } from './admin/admin.module';
 import { CoinTransaction } from './common/entities/coin-transaction.entity'; // CoinTransaction 엔티티 임포트
+import { CoinModule } from './coin/coin.module';
 
 const configService = new ConfigService();
 
