@@ -33,8 +33,9 @@ const configService = new ConfigService();
       password: configService.get<string>('DB_PASSWORD'),
       database: configService.get<string>('DB_DATABASE'),
       entities: [User, Workflow, GeneratedOutput],
-      synchronize: true,
+      synchronize: false, // 마이그레이션 사용을 위해 false로 설정
       logging: true,
+      migrations: [__dirname + '/migrations/**/*.js'], // 마이그레이션 파일 경로
     }),
     AuthModule,
     ComfyUIModule,
