@@ -3,11 +3,14 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource, IsNull } from 'typeorm';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
+import {
+  CoinTransaction,
+  CoinTransactionType,
+} from '../common/entities/coin-transaction.entity';
 import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-generated-output.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
@@ -28,6 +31,7 @@ export class GeneratedOutputService {
     private readonly storageService: IStorageService,
     private readonly coinService: CoinService,
     private readonly workflowService: WorkflowService,
+    private readonly dataSource: DataSource, // DataSource 주입
   ) {}
 
   /**
@@ -57,40 +61,66 @@ export class GeneratedOutputService {
    * @returns 저장된 GeneratedOutput 엔티티
    */
   async create(createDTO: CreateGeneratedOutputDTO): Promise<GeneratedOutput> {
-    // 1. 워크플로우 템플릿의 비용 조회
-    const cost = await this.workflowService.getWorkflowCost(
-      createDTO.sourceWorkflowId,
-    );
-
-    // 2. 코인 차감
-    await this.coinService.deductCoins(
-      createDTO.ownerUserId,
-      cost,
-      CoinTransactionReason.IMAGE_GENERATION,
-      // TODO: relatedEntityId는 생성된 output의 ID가 되어야 하지만, 현재 시점에는 알 수 없음.
-      // 생성 후 업데이트하거나, 다른 방식으로 연결해야 함.
-    );
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
     try {
-      const newOutput = this.outputRepository.create(createDTO);
-      const savedOutput = await this.outputRepository.save(newOutput);
-
-      // TODO: 코인 트랜잭션의 relatedEntityId를 savedOutput.id로 업데이트하는 로직 추가 필요
-
-      return savedOutput;
-    } catch (error) {
-      console.error(
-        '[GeneratedOutputService] Failed to create output record:',
-        error,
+      // 1. 워크플로우 템플릿의 비용 조회
+      const cost = await this.workflowService.getWorkflowCost(
+        createDTO.sourceWorkflowId,
       );
-      // 코인 차감 후 생성 기록 저장에 실패했으므로 코인 환불
-      await this.coinService.addCoins(
+
+      // 2. 코인 차감 (동일 트랜잭션 내)
+      await this.coinService.deductCoins(
         createDTO.ownerUserId,
         cost,
-        CoinTransactionReason.ADMIN_ADJUSTMENT, // 또는 REVERT_GENERATION_COST와 같은 새로운 사유
-        `Failed to create output for prompt ${createDTO.promptId}`,
+        CoinTransactionReason.IMAGE_GENERATION,
+        undefined, // relatedEntityId는 아직 알 수 없음
+        queryRunner, // QueryRunner 전달
+      );
+
+      // 3. 생성된 결과물 저장 (동일 트랜잭션 내)
+      const newOutput = queryRunner.manager.create(GeneratedOutput, createDTO);
+      const savedOutput = await queryRunner.manager.save(newOutput);
+
+      // 4. 코인 트랜잭션의 relatedEntityId를 savedOutput.id로 업데이트
+      // deductCoins에서 생성된 CoinTransaction을 찾아 relatedEntityId를 업데이트합니다.
+      // 이 과정은 동일 트랜잭션 내에서 이루어져야 합니다.
+      const coinTransaction = await queryRunner.manager.findOne(
+        CoinTransaction,
+        {
+          where: {
+            userId: createDTO.ownerUserId,
+            type: CoinTransactionType.DEDUCT,
+            reason: CoinTransactionReason.IMAGE_GENERATION,
+            relatedEntityId: IsNull(), // relatedEntityId가 null인 트랜잭션
+          },
+          order: { createdAt: 'DESC' }, // 가장 최근의 트랜잭션
+        },
+      );
+
+      if (coinTransaction) {
+        coinTransaction.relatedEntityId = savedOutput.id.toString();
+        await queryRunner.manager.save(coinTransaction);
+      } else {
+        // TODO: 적절한 로깅 또는 에러 처리 (예: 코인 트랜잭션을 찾을 수 없음)
+        console.warn(
+          `[GeneratedOutputService] Could not find CoinTransaction to update for userId: ${createDTO.ownerUserId}`,
+        );
+      }
+
+      await queryRunner.commitTransaction();
+      return savedOutput;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error(
+        '[GeneratedOutputService] Failed to create output record or deduct coin:',
+        error,
       );
       throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
