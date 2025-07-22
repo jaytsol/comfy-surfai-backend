@@ -55,6 +55,10 @@ describe('GeneratedOutputService (Unit Tests)', () => {
   };
 
   beforeEach(async () => {
+    // console.error와 console.log를 모의 처리하여 테스트 출력에서 제외
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+
     // QueryRunner Mock 설정
     queryRunner = {
       connect: jest.fn(),
