@@ -173,6 +173,16 @@ export class WorkflowService {
     return template;
   }
 
+  /**
+   * 특정 워크플로우 템플릿의 비용을 조회합니다.
+   * @param id 워크플로우 템플릿 ID
+   * @returns 워크플로우 템플릿의 비용
+   */
+  async getWorkflowCost(id: number): Promise<number> {
+    const template = await this.findOneTemplateById(id);
+    return template.cost;
+  }
+
   async removeTemplate(id: number, adminUserId: number): Promise<void> {
     const templateToRemove = await this.findOneTemplateById(id);
     console.log(`Admin #${adminUserId} is removing template #${id}`);

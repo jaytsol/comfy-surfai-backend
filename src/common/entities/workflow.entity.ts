@@ -52,6 +52,9 @@ export class Workflow {
   @Column({ type: 'simple-array', nullable: true })
   tags?: string[];
 
+  @Column({ default: 1, comment: 'Cost to use this workflow template' })
+  cost: number;
+
   @Column({
     default: false,
     comment: 'Is this template available to all users?',

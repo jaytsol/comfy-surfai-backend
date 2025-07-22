@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,15 +14,20 @@ import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import * as path from 'path';
 import { CoinService } from 'src/coin/coin.service';
 import { CoinTransactionReason } from '@/common/entities/coin-transaction.entity';
+import { Workflow } from 'src/common/entities/workflow.entity';
+import { WorkflowService } from 'src/admin/workflow/workflow.service';
 
 @Injectable()
 export class GeneratedOutputService {
   constructor(
     @InjectRepository(GeneratedOutput)
     private readonly outputRepository: Repository<GeneratedOutput>,
+    @InjectRepository(Workflow)
+    private readonly workflowRepository: Repository<Workflow>,
     @Inject('IStorageService')
     private readonly storageService: IStorageService,
     private readonly coinService: CoinService,
+    private readonly workflowService: WorkflowService,
   ) {}
 
   /**
@@ -51,16 +57,27 @@ export class GeneratedOutputService {
    * @returns 저장된 GeneratedOutput 엔티티
    */
   async create(createDTO: CreateGeneratedOutputDTO): Promise<GeneratedOutput> {
-    // 1. 코인 차감
+    // 1. 워크플로우 템플릿의 비용 조회
+    const cost = await this.workflowService.getWorkflowCost(
+      createDTO.sourceWorkflowId,
+    );
+
+    // 2. 코인 차감
     await this.coinService.deductCoins(
       createDTO.ownerUserId,
-      1, // TODO: 워크플로우 템플릿에서 비용을 가져오도록 수정
+      cost,
       CoinTransactionReason.IMAGE_GENERATION,
+      // TODO: relatedEntityId는 생성된 output의 ID가 되어야 하지만, 현재 시점에는 알 수 없음.
+      // 생성 후 업데이트하거나, 다른 방식으로 연결해야 함.
     );
 
     try {
       const newOutput = this.outputRepository.create(createDTO);
-      return this.outputRepository.save(newOutput);
+      const savedOutput = await this.outputRepository.save(newOutput);
+
+      // TODO: 코인 트랜잭션의 relatedEntityId를 savedOutput.id로 업데이트하는 로직 추가 필요
+
+      return savedOutput;
     } catch (error) {
       console.error(
         '[GeneratedOutputService] Failed to create output record:',
@@ -69,7 +86,7 @@ export class GeneratedOutputService {
       // 코인 차감 후 생성 기록 저장에 실패했으므로 코인 환불
       await this.coinService.addCoins(
         createDTO.ownerUserId,
-        1, // TODO: 워크플로우 템플릿에서 비용을 가져오도록 수정
+        cost,
         CoinTransactionReason.ADMIN_ADJUSTMENT, // 또는 REVERT_GENERATION_COST와 같은 새로운 사유
         `Failed to create output for prompt ${createDTO.promptId}`,
       );
