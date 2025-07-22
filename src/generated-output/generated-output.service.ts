@@ -11,6 +11,8 @@ import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import * as path from 'path';
+import { CoinService } from 'src/coin/coin.service';
+import { CoinTransactionReason } from '@/common/entities/coin-transaction.entity';
 
 @Injectable()
 export class GeneratedOutputService {
@@ -19,6 +21,7 @@ export class GeneratedOutputService {
     private readonly outputRepository: Repository<GeneratedOutput>,
     @Inject('IStorageService')
     private readonly storageService: IStorageService,
+    private readonly coinService: CoinService,
   ) {}
 
   /**
@@ -48,6 +51,13 @@ export class GeneratedOutputService {
    * @returns 저장된 GeneratedOutput 엔티티
    */
   async create(createDTO: CreateGeneratedOutputDTO): Promise<GeneratedOutput> {
+    // 1. 코인 차감
+    await this.coinService.deductCoins(
+      createDTO.ownerUserId,
+      1, // TODO: 워크플로우 템플릿에서 비용을 가져오도록 수정
+      CoinTransactionReason.IMAGE_GENERATION,
+    );
+
     try {
       const newOutput = this.outputRepository.create(createDTO);
       return this.outputRepository.save(newOutput);
@@ -56,7 +66,13 @@ export class GeneratedOutputService {
         '[GeneratedOutputService] Failed to create output record:',
         error,
       );
-      // 필요시 더 구체적인 예외 처리
+      // 코인 차감 후 생성 기록 저장에 실패했으므로 코인 환불
+      await this.coinService.addCoins(
+        createDTO.ownerUserId,
+        1, // TODO: 워크플로우 템플릿에서 비용을 가져오도록 수정
+        CoinTransactionReason.ADMIN_ADJUSTMENT, // 또는 REVERT_GENERATION_COST와 같은 새로운 사유
+        `Failed to create output for prompt ${createDTO.promptId}`,
+      );
       throw error;
     }
   }
