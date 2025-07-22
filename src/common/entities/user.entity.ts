@@ -38,8 +38,8 @@ export class User {
   })
   role: Role;
 
-  @Column({ nullable: true, select: false })
-  currentHashedRefreshToken?: string;
+  @Column({ nullable: true, select: false, type: 'varchar' })
+  currentHashedRefreshToken?: string | null;
 
   // 코인 잔액 추가
   @Column({ type: 'int', default: 0 })
