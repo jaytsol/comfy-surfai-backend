@@ -16,6 +16,7 @@ import { StorageModule } from './storage/storage.module';
 import { GeneratedOutputModule } from './generated-output/generated-output.module';
 import { GeneratedOutput } from './common/entities/generated-output.entity';
 import { AdminModule } from './admin/admin.module';
+import { CoinTransaction } from './common/entities/coin-transaction.entity'; // CoinTransaction 엔티티 임포트
 
 const configService = new ConfigService();
 
@@ -32,7 +33,7 @@ const configService = new ConfigService();
       username: configService.get<string>('DB_USERNAME'),
       password: configService.get<string>('DB_PASSWORD'),
       database: configService.get<string>('DB_DATABASE'),
-      entities: [User, Workflow, GeneratedOutput],
+      entities: [User, Workflow, GeneratedOutput, CoinTransaction], // CoinTransaction 엔티티 추가
       synchronize: false, // 마이그레이션 사용을 위해 false로 설정
       logging: true,
       migrations: [__dirname + '/migrations/**/*.js'], // 마이그레이션 파일 경로
