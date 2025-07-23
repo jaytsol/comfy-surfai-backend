@@ -66,20 +66,6 @@ export class GeneratedOutputService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. 워크플로우 템플릿의 비용 조회
-      const cost = await this.workflowService.getWorkflowCost(
-        createDTO.sourceWorkflowId,
-      );
-
-      // 2. 코인 차감 (동일 트랜잭션 내)
-      await this.coinService.deductCoins(
-        createDTO.ownerUserId,
-        cost,
-        CoinTransactionReason.IMAGE_GENERATION,
-        undefined, // relatedEntityId는 아직 알 수 없음
-        queryRunner, // QueryRunner 전달
-      );
-
       // 3. 생성된 결과물 저장 (동일 트랜잭션 내)
       const newOutput = queryRunner.manager.create(GeneratedOutput, createDTO);
       const savedOutput = await queryRunner.manager.save(newOutput);

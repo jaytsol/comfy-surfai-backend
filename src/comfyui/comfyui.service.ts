@@ -24,6 +24,8 @@ import { getMimeType } from 'src/common/utils/mime-type.util';
 import { GeneratedOutputService } from 'src/generated-output/generated-output.service';
 import { CreateGeneratedOutputDTO } from 'src/common/dto/generated-output/create-generated-output.dto';
 import { GeneratedOutput } from 'src/common/entities/generated-output.entity';
+import { CoinService } from 'src/coin/coin.service'; // CoinService 임포트
+import { CoinTransactionReason } from '@/common/entities/coin-transaction.entity';
 // --- 로컬 인터페이스 정의 ---
 export interface ComfyUIRequest {
   client_id: string;
@@ -60,6 +62,7 @@ export class ComfyUIService implements OnModuleInit {
     private readonly workflowService: WorkflowService,
     private readonly generatedOutputService: GeneratedOutputService,
     @Inject('IStorageService') private readonly storageService: IStorageService,
+    private readonly coinService: CoinService, // CoinService 주입
   ) {
     const comfyuiHost = this.configService.get<string>('COMFYUI_HOST');
     const username = this.configService.get<string>('NGINX_USERNAME');
@@ -340,6 +343,22 @@ export class ComfyUIService implements OnModuleInit {
     const template = await this.workflowService.findOneTemplateById(
       generateDTO.templateId,
     );
+
+    // 1. 코인 검증 및 차감
+    const cost = template.cost; // 템플릿 비용
+    const userCurrentCoins = await this.coinService.getBalance(adminUserId);
+
+    if (userCurrentCoins < cost) {
+      throw new HttpException('코인이 부족합니다.', HttpStatus.BAD_REQUEST);
+    }
+
+    // 코인 차감 (트랜잭션은 GeneratedOutputService.create에서 관리)
+    await this.coinService.deductCoins(
+      adminUserId,
+      cost,
+      CoinTransactionReason.IMAGE_GENERATION,
+    );
+
     const baseDefinition = template.definition as ComfyUIInput;
     const parameterMap = template.parameter_map;
     const modifiedDefinition: ComfyUIInput = JSON.parse(
