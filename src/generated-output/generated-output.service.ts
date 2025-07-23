@@ -18,7 +18,7 @@ import * as path from 'path';
 import { CoinService } from '../coin/coin.service';
 import { CoinTransactionReason } from '@/common/entities/coin-transaction.entity';
 import { Workflow } from '../common/entities/workflow.entity';
-import { WorkflowService } from '../admin/workflow/workflow.service';
+import { WorkflowService } from '../modules/workflow/workflow.service';
 
 @Injectable()
 export class GeneratedOutputService {

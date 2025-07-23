@@ -17,7 +17,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocket } from 'ws';
 import { EventEmitter } from 'events';
-import { WorkflowService } from 'src/admin/workflow/workflow.service';
+import { WorkflowService } from '@/modules/workflow/workflow.service';
 import { GenerateImageDTO } from 'src/common/dto/generate-image.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import { getMimeType } from 'src/common/utils/mime-type.util';

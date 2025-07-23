@@ -7,7 +7,7 @@ import { GeneratedOutputController } from './generated-output.controller';
 import { StorageModule } from 'src/storage/storage.module';
 import { CoinModule } from 'src/coin/coin.module';
 import { Workflow } from 'src/common/entities/workflow.entity';
-import { WorkflowModule } from 'src/admin/workflow/workflow.module';
+import { WorkflowModule } from '@/modules/workflow/workflow.module';
 
 @Module({
   imports: [

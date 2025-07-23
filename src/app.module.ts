@@ -9,13 +9,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './common/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
-import { WorkflowModule } from './admin/workflow/workflow.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 import { Workflow } from './common/entities/workflow.entity';
 import { EventsGateway } from './common/events/events.gateway';
 import { StorageModule } from './storage/storage.module';
 import { GeneratedOutputModule } from './generated-output/generated-output.module';
 import { GeneratedOutput } from './common/entities/generated-output.entity';
-import { AdminModule } from './admin/admin.module';
+import { AdminModule } from './modules/admin.module';
 import { CoinTransaction } from './common/entities/coin-transaction.entity'; // CoinTransaction 엔티티 임포트
 import { CoinModule } from './coin/coin.module';
 
