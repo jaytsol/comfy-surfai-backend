@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Test, TestingModule } from '@nestjs/testing';
 import { GeneratedOutputService } from './generated-output.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -8,7 +9,6 @@ import { IStorageService } from '../storage/interfaces/storage.interface';
 import { CoinService } from '../coin/coin.service';
 import { WorkflowService } from '../modules/workflow/workflow.service';
 import {
-  BadRequestException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -147,13 +147,8 @@ describe('GeneratedOutputService (Unit Tests)', () => {
   });
 
   describe('create', () => {
-    it('should successfully create a generated output and deduct coins within a transaction', async () => {
+    it('should successfully create a generated output and update coin transaction relatedEntityId', async () => {
       // given
-      const expectedCost = 100;
-      workflowService.getWorkflowCost = jest
-        .fn()
-        .mockResolvedValue(expectedCost);
-
       // queryRunner.manager.save가 첫 호출(GeneratedOutput)에는 mockGeneratedOutput을,
       // 두 번째 호출(CoinTransaction 업데이트)에는 업데이트된 CoinTransaction을 반환하도록 설정
       queryRunner.manager.save = jest
@@ -182,16 +177,7 @@ describe('GeneratedOutputService (Unit Tests)', () => {
       expect(queryRunner.connect).toHaveBeenCalledTimes(1);
       expect(queryRunner.startTransaction).toHaveBeenCalledTimes(1);
 
-      expect(workflowService.getWorkflowCost).toHaveBeenCalledWith(
-        mockCreateDto.sourceWorkflowId,
-      );
-      expect(coinService.deductCoins).toHaveBeenCalledWith(
-        mockCreateDto.ownerUserId,
-        expectedCost,
-        CoinTransactionReason.IMAGE_GENERATION,
-        undefined, // 초기 relatedEntityId는 undefined
-        queryRunner, // queryRunner가 전달되었는지 확인
-      );
+      // workflowService.getWorkflowCost 및 coinService.deductCoins는 ComfyUIService에서 호출되므로 여기서는 기대하지 않음
 
       expect(queryRunner.manager.create).toHaveBeenCalledWith(
         GeneratedOutput,
@@ -229,53 +215,9 @@ describe('GeneratedOutputService (Unit Tests)', () => {
       expect(result).toEqual(mockGeneratedOutput);
     });
 
-    it('should rollback transaction if coin deduction fails due to insufficient balance', async () => {
-      // given
-      const expectedCost = 100;
-      workflowService.getWorkflowCost = jest
-        .fn()
-        .mockResolvedValue(expectedCost);
-      coinService.deductCoins = jest
-        .fn()
-        .mockRejectedValue(new BadRequestException('코인 잔액이 부족합니다.')); // 코인 차감 실패 모의
-
-      // when
-      await expect(service.create(mockCreateDto)).rejects.toThrow(
-        BadRequestException,
-      );
-
-      // then
-      expect(dataSource.createQueryRunner).toHaveBeenCalledTimes(1);
-      expect(queryRunner.connect).toHaveBeenCalledTimes(1);
-      expect(queryRunner.startTransaction).toHaveBeenCalledTimes(1);
-
-      expect(workflowService.getWorkflowCost).toHaveBeenCalledWith(
-        mockCreateDto.sourceWorkflowId,
-      );
-      expect(coinService.deductCoins).toHaveBeenCalledWith(
-        mockCreateDto.ownerUserId,
-        expectedCost,
-        CoinTransactionReason.IMAGE_GENERATION,
-        undefined,
-        queryRunner,
-      );
-
-      expect(queryRunner.manager.create).not.toHaveBeenCalled(); // GeneratedOutput 생성되지 않음
-      expect(queryRunner.manager.save).not.toHaveBeenCalled(); // GeneratedOutput 저장되지 않음
-      expect(queryRunner.commitTransaction).not.toHaveBeenCalled(); // 커밋되지 않음
-      expect(queryRunner.rollbackTransaction).toHaveBeenCalledTimes(1); // 롤백 호출됨
-      expect(queryRunner.release).toHaveBeenCalledTimes(1);
-    });
-
     it('should rollback transaction if saving generated output fails', async () => {
       // given
-      const expectedCost = 100;
-      workflowService.getWorkflowCost = jest
-        .fn()
-        .mockResolvedValue(expectedCost);
-      coinService.deductCoins = jest
-        .fn()
-        .mockResolvedValue({ coinBalance: 900 }); // 코인 차감 성공 모의
+      // CoinService.deductCoins는 ComfyUIService에서 호출되므로 여기서는 모의할 필요 없음
 
       // GeneratedOutput 저장 시 에러 발생 모의
       queryRunner.manager.save = jest
@@ -292,16 +234,7 @@ describe('GeneratedOutputService (Unit Tests)', () => {
       expect(queryRunner.connect).toHaveBeenCalledTimes(1);
       expect(queryRunner.startTransaction).toHaveBeenCalledTimes(1);
 
-      expect(workflowService.getWorkflowCost).toHaveBeenCalledWith(
-        mockCreateDto.sourceWorkflowId,
-      );
-      expect(coinService.deductCoins).toHaveBeenCalledWith(
-        mockCreateDto.ownerUserId,
-        expectedCost,
-        CoinTransactionReason.IMAGE_GENERATION,
-        undefined,
-        queryRunner,
-      );
+      // workflowService.getWorkflowCost 및 coinService.deductCoins는 ComfyUIService에서 호출되므로 여기서는 기대하지 않음
 
       expect(queryRunner.manager.create).toHaveBeenCalledWith(
         GeneratedOutput,
