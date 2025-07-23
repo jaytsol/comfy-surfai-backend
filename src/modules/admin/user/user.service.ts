@@ -14,7 +14,9 @@ export class UserService {
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    return this.userRepository.find({
+      order: { id: 'DESC' }, // ID 오름차순 정렬
+    });
   }
 
   async addCoin(userId: number, amount: number): Promise<User> {
