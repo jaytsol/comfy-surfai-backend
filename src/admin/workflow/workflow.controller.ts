@@ -159,6 +159,7 @@ export class WorkflowController {
     responseDTO.parameter_map = workflow.parameter_map;
     responseDTO.previewImageUrl = workflow.previewImageUrl;
     responseDTO.tags = workflow.tags;
+    responseDTO.cost = workflow.cost;
     responseDTO.isPublicTemplate = workflow.isPublicTemplate;
     responseDTO.ownerUserId = workflow.ownerUserId;
     responseDTO.createdAt = workflow.createdAt;
