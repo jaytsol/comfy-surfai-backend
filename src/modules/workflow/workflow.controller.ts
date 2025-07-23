@@ -38,11 +38,12 @@ import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.en
 @ApiTags('Admin - Workflow Templates')
 @ApiCookieAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.Admin)
+@Roles(Role.User)
 @Controller('workflow-templates')
 export class WorkflowController {
   constructor(private readonly workflowService: WorkflowService) {}
 
+  @Roles(Role.Admin, Role.User)
   @Get('parameter-presets')
   @ApiOperation({ summary: '파라미터 사전 설정 목록 조회' })
   getParameterPresets(
@@ -51,12 +52,14 @@ export class WorkflowController {
     return this.workflowService.getParameterPresets(category);
   }
 
+  @Roles(Role.Admin, Role.User)
   @Get('categories')
   @ApiOperation({ summary: '사용 가능한 모든 워크플로우 카테고리 목록 조회' })
   getWorkflowCategories(): string[] {
     return this.workflowService.getWorkflowCategories();
   }
 
+  @Roles(Role.Admin)
   @Post()
   @ApiOperation({ summary: '1단계: 새 워크플로우 템플릿 생성 (뼈대)' })
   @ApiResponse({ status: 201, type: WorkflowTemplateResponseDTO })
@@ -72,6 +75,7 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(newTemplate);
   }
 
+  @Roles(Role.Admin)
   @Put(':id/parameter-map')
   @ApiOperation({ summary: '2단계: 워크플로우 템플릿의 파라미터 맵 설정' })
   @ApiBody({
@@ -97,6 +101,7 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(updatedTemplate);
   }
 
+  @Roles(Role.Admin)
   @Patch(':id')
   @ApiOperation({ summary: '전체 워크플로우 템플릿 정보 수정 (편집 페이지용)' })
   @ApiResponse({ status: 200, type: WorkflowTemplateResponseDTO })
@@ -114,7 +119,7 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(updatedTemplate);
   }
 
-  // --- 전체 목록 및 단일 조회 ---
+  @Roles(Role.Admin, Role.User)
   @Get()
   @ApiOperation({ summary: '모든 워크플로우 템플릿 목록 조회' })
   async findAllTemplates(): Promise<WorkflowTemplateResponseDTO[]> {
@@ -122,6 +127,7 @@ export class WorkflowController {
     return templates.map((t) => this.mapWorkflowToResponseDTO(t));
   }
 
+  @Roles(Role.Admin, Role.User)
   @Get(':id')
   @ApiOperation({ summary: '특정 워크플로우 템플릿 상세 조회' })
   async findOneTemplate(
@@ -131,6 +137,7 @@ export class WorkflowController {
     return this.mapWorkflowToResponseDTO(template);
   }
 
+  @Roles(Role.Admin, Role.Admin)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: '워크플로우 템플릿 삭제' })
