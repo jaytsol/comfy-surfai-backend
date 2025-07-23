@@ -15,7 +15,7 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find({
-      order: { id: 'DESC' }, // ID 오름차순 정렬
+      order: { id: 'DESC' }, // ID 내림차순 정렬
     });
   }
 
