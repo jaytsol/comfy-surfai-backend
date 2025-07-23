@@ -5,20 +5,33 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource, IsNull } from 'typeorm';
 import { GeneratedOutput } from '../common/entities/generated-output.entity';
+import {
+  CoinTransaction,
+  CoinTransactionType,
+} from '../common/entities/coin-transaction.entity';
 import { CreateGeneratedOutputDTO } from '../common/dto/generated-output/create-generated-output.dto';
 import { ListHistoryQueryDTO } from '../common/dto/generated-output/list-history-query.dto';
 import { IStorageService } from 'src/storage/interfaces/storage.interface';
 import * as path from 'path';
+import { CoinService } from '../coin/coin.service';
+import { CoinTransactionReason } from '@/common/entities/coin-transaction.entity';
+import { Workflow } from '../common/entities/workflow.entity';
+import { WorkflowService } from '../modules/workflow/workflow.service';
 
 @Injectable()
 export class GeneratedOutputService {
   constructor(
     @InjectRepository(GeneratedOutput)
     private readonly outputRepository: Repository<GeneratedOutput>,
+    @InjectRepository(Workflow)
+    private readonly workflowRepository: Repository<Workflow>,
     @Inject('IStorageService')
     private readonly storageService: IStorageService,
+    private readonly coinService: CoinService,
+    private readonly workflowService: WorkflowService,
+    private readonly dataSource: DataSource, // DataSource 주입
   ) {}
 
   /**
@@ -48,16 +61,52 @@ export class GeneratedOutputService {
    * @returns 저장된 GeneratedOutput 엔티티
    */
   async create(createDTO: CreateGeneratedOutputDTO): Promise<GeneratedOutput> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      const newOutput = this.outputRepository.create(createDTO);
-      return this.outputRepository.save(newOutput);
+      // 3. 생성된 결과물 저장 (동일 트랜잭션 내)
+      const newOutput = queryRunner.manager.create(GeneratedOutput, createDTO);
+      const savedOutput = await queryRunner.manager.save(newOutput);
+
+      // 4. 코인 트랜잭션의 relatedEntityId를 savedOutput.id로 업데이트
+      // deductCoins에서 생성된 CoinTransaction을 찾아 relatedEntityId를 업데이트합니다.
+      // 이 과정은 동일 트랜잭션 내에서 이루어져야 합니다.
+      const coinTransaction = await queryRunner.manager.findOne(
+        CoinTransaction,
+        {
+          where: {
+            userId: createDTO.ownerUserId,
+            type: CoinTransactionType.DEDUCT,
+            reason: CoinTransactionReason.IMAGE_GENERATION,
+            relatedEntityId: IsNull(), // relatedEntityId가 null인 트랜잭션
+          },
+          order: { createdAt: 'DESC' }, // 가장 최근의 트랜잭션
+        },
+      );
+
+      if (coinTransaction) {
+        coinTransaction.relatedEntityId = savedOutput.id.toString();
+        await queryRunner.manager.save(coinTransaction);
+      } else {
+        // TODO: 적절한 로깅 또는 에러 처리 (예: 코인 트랜잭션을 찾을 수 없음)
+        console.warn(
+          `[GeneratedOutputService] Could not find CoinTransaction to update for userId: ${createDTO.ownerUserId}`,
+        );
+      }
+
+      await queryRunner.commitTransaction();
+      return savedOutput;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       console.error(
-        '[GeneratedOutputService] Failed to create output record:',
+        '[GeneratedOutputService] Failed to create output record or deduct coin:',
         error,
       );
-      // 필요시 더 구체적인 예외 처리
       throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 

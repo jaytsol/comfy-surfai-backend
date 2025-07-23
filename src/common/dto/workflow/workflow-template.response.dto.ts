@@ -58,6 +58,12 @@ export class WorkflowTemplateResponseDTO {
   })
   tags?: string[];
 
+  @ApiProperty({
+    example: 1,
+    description: '이 템플릿을 사용하여 이미지를 생성할 때 소모되는 코인 수',
+  })
+  cost: number;
+
   @ApiProperty({ example: false, description: '템플릿 공개 여부' })
   isPublicTemplate: boolean;
 

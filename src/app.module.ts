@@ -9,13 +9,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './common/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigService } from '@nestjs/config';
-import { WorkflowModule } from './admin/workflow/workflow.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 import { Workflow } from './common/entities/workflow.entity';
 import { EventsGateway } from './common/events/events.gateway';
 import { StorageModule } from './storage/storage.module';
 import { GeneratedOutputModule } from './generated-output/generated-output.module';
 import { GeneratedOutput } from './common/entities/generated-output.entity';
-import { AdminModule } from './admin/admin.module';
+import { AdminModule } from './modules/admin.module';
+import { CoinTransaction } from './common/entities/coin-transaction.entity'; // CoinTransaction 엔티티 임포트
+import { CoinModule } from './coin/coin.module';
 
 const configService = new ConfigService();
 
@@ -32,9 +34,10 @@ const configService = new ConfigService();
       username: configService.get<string>('DB_USERNAME'),
       password: configService.get<string>('DB_PASSWORD'),
       database: configService.get<string>('DB_DATABASE'),
-      entities: [User, Workflow, GeneratedOutput],
-      synchronize: true,
+      entities: [User, Workflow, GeneratedOutput, CoinTransaction], // CoinTransaction 엔티티 추가
+      synchronize: false, // 마이그레이션 사용을 위해 false로 설정
       logging: true,
+      migrations: [__dirname + '/migrations/**/*.js'], // 마이그레이션 파일 경로
     }),
     AuthModule,
     ComfyUIModule,
@@ -42,6 +45,7 @@ const configService = new ConfigService();
     WorkflowModule,
     StorageModule,
     AdminModule,
+    CoinModule, // CoinModule 추가
   ],
   controllers: [AppController, ComfyUIController],
   providers: [AppService, ComfyUIService, EventsGateway],
