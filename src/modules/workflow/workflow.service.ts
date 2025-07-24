@@ -146,6 +146,13 @@ export class WorkflowService {
       );
     }
 
+    if (updateDTO.cost !== undefined) {
+      if (updateDTO.cost < 0) {
+        throw new BadRequestException('cost는 0보다 작을 수 없습니다.');
+      }
+      existingTemplate.cost = updateDTO.cost;
+    }
+
     const updatedTemplate = this.workflowRepository.merge(
       existingTemplate,
       updateDTO,
