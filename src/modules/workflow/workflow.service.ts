@@ -17,6 +17,8 @@ import {
   WORKFLOW_CATEGORIES,
 } from '../../common/constants/parameter-presets';
 import { ParameterMapCategory } from '../../common/enums/parameter-map-category.enum';
+import { PaginationDto } from 'src/common/dto/pagination.dto'; // PaginationDto 임포트
+import { PaginatedResponse } from 'src/common/interfaces/pagination.interface'; // PaginatedResponse 임포트
 
 @Injectable()
 export class WorkflowService {
@@ -161,11 +163,24 @@ export class WorkflowService {
     return this.workflowRepository.save(updatedTemplate);
   }
 
-  async findAllTemplates(): Promise<Workflow[]> {
-    return this.workflowRepository.find({
+  async findAllTemplates(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<Workflow>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const [data, total] = await this.workflowRepository.findAndCount({
       where: { isTemplate: true },
       order: { createdAt: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOneTemplateById(id: number): Promise<Workflow> {
