@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   UseGuards,
+  Query, // Query 데코레이터 임포트
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from 'src/common/entities/user.entity';
@@ -14,6 +15,8 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { PaginationDto } from 'src/common/dto/pagination.dto'; // PaginationDto 임포트
+import { PaginatedResponse } from 'src/common/interfaces/pagination.interface'; // PaginatedResponse 임포트
 import {
   ApiTags,
   ApiOperation,
@@ -32,8 +35,10 @@ export class UserController {
   @Get()
   @ApiOperation({ summary: '모든 사용자 목록 조회 (관리자 전용)' })
   @ApiResponse({ status: 200, description: '사용자 목록 반환', type: [User] })
-  async findAll(): Promise<User[]> {
-    return this.userService.findAll();
+  async findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<User>> {
+    return this.userService.findAll(paginationDto);
   }
 
   @Post(':id/coin')
