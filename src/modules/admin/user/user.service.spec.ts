@@ -38,8 +38,12 @@ describe('UserService (Admin)', () => {
         {
           provide: CoinService,
           useValue: {
-            addCoins: jest.fn().mockResolvedValue({ ...mockUser, coinBalance: 110 }),
-            deductCoins: jest.fn().mockResolvedValue({ ...mockUser, coinBalance: 90 }),
+            addCoins: jest
+              .fn()
+              .mockResolvedValue({ ...mockUser, coinBalance: 110 }),
+            deductCoins: jest
+              .fn()
+              .mockResolvedValue({ ...mockUser, coinBalance: 90 }),
           },
         },
       ],
@@ -56,11 +60,20 @@ describe('UserService (Admin)', () => {
 
   describe('findAll', () => {
     it('should return an array of users sorted by ID', async () => {
-      const users = [{ ...mockUser, id: 2 }, { ...mockUser, id: 1 }];
-      jest.spyOn(userRepository, 'find').mockResolvedValue(users.sort((a, b) => a.id - b.id));
-      const result = await service.findAll();
-      expect(result).toEqual(users.sort((a, b) => a.id - b.id));
-      expect(userRepository.find).toHaveBeenCalledWith({ order: { id: 'DESC' } });
+      const users = [
+        { ...mockUser, id: 2 },
+        { ...mockUser, id: 1 },
+      ];
+      jest
+        .spyOn(userRepository, 'findAndCount')
+        .mockResolvedValue([users.sort((a, b) => a.id - b.id), users.length]);
+      const result = await service.findAll({ page: 1, limit: 10 });
+      expect(result.data).toEqual(users.sort((a, b) => a.id - b.id));
+      expect(userRepository.findAndCount).toHaveBeenCalledWith({
+        order: { id: 'DESC' },
+        take: 10,
+        skip: 0,
+      });
     });
   });
 
@@ -96,7 +109,9 @@ describe('UserService (Admin)', () => {
 
     it('should throw NotFoundException if user not found when deducting coins', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-      await expect(service.deductCoin(999, 10)).rejects.toThrow(NotFoundException);
+      await expect(service.deductCoin(999, 10)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

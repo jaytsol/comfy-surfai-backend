@@ -34,6 +34,8 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { ParameterPreset } from 'src/common/constants/parameter-presets';
 import { WorkflowParameterMappingItemDTO } from 'src/common/dto/workflow/workflow-parameter-mapping-item.dto';
 import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.enum';
+import { PaginationDto } from 'src/common/dto/pagination.dto'; // PaginationDto 임포트
+import { PaginatedResponse } from 'src/common/interfaces/pagination.interface'; // PaginatedResponse 임포트
 
 @ApiTags('Admin - Workflow Templates')
 @ApiCookieAuth()
@@ -122,9 +124,17 @@ export class WorkflowController {
   @Roles(Role.Admin, Role.User)
   @Get()
   @ApiOperation({ summary: '모든 워크플로우 템플릿 목록 조회' })
-  async findAllTemplates(): Promise<WorkflowTemplateResponseDTO[]> {
-    const templates = await this.workflowService.findAllTemplates();
-    return templates.map((t) => this.mapWorkflowToResponseDTO(t));
+  async findAllTemplates(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<WorkflowTemplateResponseDTO>> {
+    const paginatedTemplates =
+      await this.workflowService.findAllTemplates(paginationDto);
+    return {
+      ...paginatedTemplates,
+      data: paginatedTemplates.data.map((t) =>
+        this.mapWorkflowToResponseDTO(t),
+      ),
+    };
   }
 
   @Roles(Role.Admin, Role.User)

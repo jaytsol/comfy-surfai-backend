@@ -49,9 +49,9 @@ describe('UserController (Admin)', () => {
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, limit: 10 });
       expect(result).toEqual([mockUser]);
-      expect(userService.findAll).toHaveBeenCalled();
+      expect(userService.findAll).toHaveBeenCalledWith({ page: 1, limit: 10 });
     });
   });
 

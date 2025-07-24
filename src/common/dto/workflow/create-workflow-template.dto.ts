@@ -8,6 +8,7 @@ import {
   IsArray,
   IsUrl,
   IsDefined,
+  IsNumber,
 } from 'class-validator';
 import { ParameterMapCategory } from 'src/common/enums/parameter-map-category.enum';
 
@@ -69,4 +70,12 @@ export class CreateWorkflowTemplateDTO {
   @IsBoolean()
   @IsOptional()
   isPublicTemplate?: boolean = false;
+
+  @ApiPropertyOptional({
+    description: '소모 코인',
+    default: 0,
+  })
+  @IsNumber()
+  @IsOptional()
+  cost?: number = 0;
 }
