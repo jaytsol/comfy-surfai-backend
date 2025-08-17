@@ -96,10 +96,12 @@ export class ComfyUIService implements OnModuleInit {
     this.ws = new WebSocket(this.comfyuiWsUrl, {
       headers: { Authorization: this.authHeader },
     });
-    this.ws.onopen = () =>
+    this.ws.onopen = () => {
       console.log(
         `Successfully connected to ComfyUI WebSocket (clientId: ${this.client_id})`,
       );
+      this.wsMessage$.emit('status', 'ONLINE');
+    };
 
     // WebSocket 메시지 핸들러 (서비스 초기화 시 한 번만 등록)
     this.ws.onmessage = (event) => {
@@ -153,6 +155,7 @@ export class ComfyUIService implements OnModuleInit {
       console.warn(
         `ComfyUI WebSocket disconnected: Code ${event.code}, Reason: ${event.reason}`,
       );
+      this.wsMessage$.emit('status', 'OFFLINE');
       setTimeout(() => this.connectToComfyUIWebSocket(), 5000);
     };
   }
