@@ -218,7 +218,7 @@ export class GeneratedOutputService {
       new Date().getTime() - output.createdAt.getTime() > twoDaysInMs;
 
     if (isExpired) {
-      // 파일이 생성된 지 2일이 지났다면, 더 이상 사용할 수 없음을 알립니다.
+      // 파일이 생성된 지 x일이 지났다면, 더 이상 사용할 수 없음을 알립니다.
       throw new NotFoundException(
         'The file has expired and is no longer available for download.',
       );
