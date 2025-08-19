@@ -3,6 +3,7 @@ import { User } from './common/entities/user.entity';
 import { Workflow } from './common/entities/workflow.entity';
 import { GeneratedOutput } from './common/entities/generated-output.entity';
 import { CoinTransaction } from './common/entities/coin-transaction.entity'; // CoinTransaction 엔티티 임포트
+import { SocialConnection } from './modules/social/entities/social-connection.entity';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
@@ -23,7 +24,7 @@ const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE,
   synchronize: false, // 마이그레이션 사용 시 false
   logging: true,
-  entities: [User, Workflow, GeneratedOutput, CoinTransaction], // CoinTransaction 엔티티 추가
+  entities: [User, Workflow, GeneratedOutput, CoinTransaction, SocialConnection], // CoinTransaction 엔티티 추가
   migrations: [__dirname + '/migrations/**/*.ts'],
   subscribers: [],
 });

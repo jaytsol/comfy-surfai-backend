@@ -10,6 +10,7 @@ import { GeneratedOutput } from './generated-output.entity';
 import { Workflow } from './workflow.entity';
 import { CoinTransaction } from './coin-transaction.entity';
 import { Role } from '../enums/role.enum';
+import { SocialConnection } from '../../modules/social/entities/social-connection.entity';
 
 @Entity('users')
 export class User {
@@ -56,6 +57,12 @@ export class User {
 
   @OneToMany(() => CoinTransaction, (transaction) => transaction.user)
   coinTransactions: CoinTransaction[];
+
+  @OneToMany(
+    () => SocialConnection,
+    (socialConnection) => socialConnection.user,
+  )
+  socialConnections: SocialConnection[];
 
   @CreateDateColumn()
   createdAt: Date;
