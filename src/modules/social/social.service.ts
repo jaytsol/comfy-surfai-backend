@@ -10,5 +10,16 @@ export class SocialService {
     private readonly socialConnectionsRepository: Repository<SocialConnection>,
   ) {}
 
-  // TODO: Implement business logic for social connections
+  handleGoogleConnection(googleUser: any) {
+    // TODO: Get the logged-in SurfAI user ID.
+    const surfaiUserId = 1; // Placeholder
+
+    // TODO: Encrypt access and refresh tokens before saving.
+
+    // TODO: Use repository to save the new social connection.
+    // this.socialConnectionsRepository.upsert({ ... });
+
+    console.log('Handling Google connection for:', googleUser);
+    return { message: 'Successfully handled Google connection' };
+  }
 }
