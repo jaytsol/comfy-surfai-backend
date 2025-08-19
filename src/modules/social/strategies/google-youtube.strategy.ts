@@ -20,15 +20,15 @@ export class GoogleYouTubeStrategy extends PassportStrategy(
       ],
       accessType: 'offline', // To get a refresh token
       prompt: 'consent', // To ensure a refresh token is provided every time
-    });
+    } as any);
   }
 
-  async validate(
+  validate(
     accessToken: string,
     refreshToken: string,
     profile: any,
     done: VerifyCallback,
-  ): Promise<any> {
+  ): void {
     const { name, emails, photos } = profile;
     const user = {
       email: emails[0].value,
