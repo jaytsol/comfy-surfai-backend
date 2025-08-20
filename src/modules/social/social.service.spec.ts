@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { SocialService } from './social.service';
 import {
   SocialConnection,
@@ -12,6 +13,8 @@ import { UnauthorizedException } from '@nestjs/common';
 // Mocking the dependencies
 const mockSocialConnectionsRepository = {
   upsert: jest.fn(),
+  find: jest.fn(),
+  delete: jest.fn(),
 };
 
 const mockJwtService = {
@@ -25,6 +28,7 @@ const mockEncryptionService = {
 
 describe('SocialService', () => {
   let service: SocialService;
+  let repository: Repository<SocialConnection>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -46,6 +50,9 @@ describe('SocialService', () => {
     }).compile();
 
     service = module.get<SocialService>(SocialService);
+    repository = module.get<Repository<SocialConnection>>(
+      getRepositoryToken(SocialConnection),
+    );
   });
 
   afterEach(() => {
@@ -122,6 +129,40 @@ describe('SocialService', () => {
         }),
         ['platform', 'user'],
       );
+    });
+  });
+
+  describe('getConnections', () => {
+    it('should return an array of connected platform names', async () => {
+      const userId = 1;
+      const connections = [
+        { platform: SocialPlatform.YOUTUBE },
+        { platform: SocialPlatform.X },
+      ] as SocialConnection[];
+
+      mockSocialConnectionsRepository.find.mockResolvedValue(connections);
+
+      const result = await service.getConnections(userId);
+
+      expect(repository.find).toHaveBeenCalledWith({
+        where: { user: { id: userId } },
+        select: ['platform'],
+      });
+      expect(result).toEqual(['YOUTUBE', 'X']);
+    });
+  });
+
+  describe('disconnectPlatform', () => {
+    it('should call the delete method with correct parameters', async () => {
+      const userId = 1;
+      const platform = 'YOUTUBE';
+
+      await service.disconnectPlatform(userId, platform);
+
+      expect(repository.delete).toHaveBeenCalledWith({
+        user: { id: userId },
+        platform: SocialPlatform.YOUTUBE,
+      });
     });
   });
 });
