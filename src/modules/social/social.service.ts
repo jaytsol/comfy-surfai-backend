@@ -6,6 +6,7 @@ import {
   SocialConnection,
   SocialPlatform,
 } from './entities/social-connection.entity';
+import { EncryptionService } from '../../common/services/encryption.service';
 
 @Injectable()
 export class SocialService {
@@ -13,6 +14,7 @@ export class SocialService {
     @InjectRepository(SocialConnection)
     private readonly socialConnectionsRepository: Repository<SocialConnection>,
     private readonly jwtService: JwtService,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   generateState(userId: number): string {
@@ -35,15 +37,19 @@ export class SocialService {
     const { accessToken, refreshToken, email, firstName, lastName } =
       googleUser;
 
-    // TODO: Encrypt access and refresh tokens before saving.
+    const encryptedAccessToken = this.encryptionService.encrypt(accessToken);
+    const encryptedRefreshToken = refreshToken
+      ? this.encryptionService.encrypt(refreshToken)
+      : null;
+
     const connectionToSave = {
       user: { id: userId },
       platform: SocialPlatform.YOUTUBE,
       platformUsername: `${firstName} ${lastName} (${email})`,
-      accessToken: accessToken,
+      accessToken: encryptedAccessToken,
       connectedAt: new Date(),
       // Only include refreshToken if it exists
-      ...(refreshToken && { refreshToken: refreshToken }),
+      ...(encryptedRefreshToken && { refreshToken: encryptedRefreshToken }),
     };
 
     await this.socialConnectionsRepository.upsert(connectionToSave, [

@@ -7,6 +7,7 @@ import { GoogleYouTubeStrategy } from './strategies/google-youtube.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { EncryptionService } from '../../common/services/encryption.service';
 
 import { GoogleConnectGuard } from './guards/google-connect.guard';
 
@@ -23,6 +24,11 @@ import { GoogleConnectGuard } from './guards/google-connect.guard';
     }),
   ],
   controllers: [SocialController],
-  providers: [SocialService, GoogleYouTubeStrategy, GoogleConnectGuard],
+  providers: [
+    SocialService,
+    GoogleYouTubeStrategy,
+    GoogleConnectGuard,
+    EncryptionService,
+  ],
 })
 export class SocialModule {}
