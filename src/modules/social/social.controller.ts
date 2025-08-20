@@ -31,6 +31,11 @@ export class SocialController {
     res.redirect(`${frontendUrl}/settings/connections`);
   }
 
-  // TODO: Implement GET /connections
+  @Get('connections')
+  @UseGuards(JwtAuthGuard)
+  async getConnections(@Req() req) {
+    return this.socialService.getConnections(req.user.id);
+  }
+
   // TODO: Implement POST /disconnect/:platform
 }

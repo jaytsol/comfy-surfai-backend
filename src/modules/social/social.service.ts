@@ -59,4 +59,12 @@ export class SocialService {
 
     return { message: 'Successfully handled Google connection' };
   }
+
+  async getConnections(userId: number): Promise<SocialPlatform[]> {
+    const connections = await this.socialConnectionsRepository.find({
+      where: { user: { id: userId } },
+      select: ['platform'],
+    });
+    return connections.map((c) => c.platform);
+  }
 }
