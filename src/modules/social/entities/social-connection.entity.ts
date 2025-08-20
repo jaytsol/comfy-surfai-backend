@@ -4,6 +4,7 @@ import {
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../../common/entities/user.entity';
@@ -16,6 +17,7 @@ export enum SocialPlatform {
   TIKTOK = 'TIKTOK',
 }
 
+@Unique(['user', 'platform'])
 @Entity({ name: 'social_connections' })
 export class SocialConnection {
   @PrimaryGeneratedColumn()
