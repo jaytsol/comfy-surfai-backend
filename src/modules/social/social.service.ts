@@ -24,6 +24,7 @@ export class SocialService {
     try {
       const payload = this.jwtService.verify(state);
       return { userId: payload.sub };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new UnauthorizedException('Invalid state token');
     }
@@ -31,7 +32,8 @@ export class SocialService {
 
   async handleGoogleConnection(state: string, googleUser: any) {
     const { userId } = this.validateState(state);
-    const { accessToken, refreshToken, email, firstName, lastName } = googleUser;
+    const { accessToken, refreshToken, email, firstName, lastName } =
+      googleUser;
 
     // TODO: Encrypt access and refresh tokens before saving.
     const connectionToSave = {
