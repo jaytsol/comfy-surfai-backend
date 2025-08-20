@@ -33,12 +33,12 @@ export class EncryptionService {
   }
 
   decrypt(encryptedText: string): string {
-    try {
-      const parts = encryptedText.split(':');
-      if (parts.length !== 3) {
-        throw new Error('Invalid encrypted text format');
-      }
+    const parts = encryptedText.split(':');
+    if (parts.length !== 3) {
+      throw new Error('Invalid encrypted text format');
+    }
 
+    try {
       const iv = Buffer.from(parts[0], 'hex');
       const authTag = Buffer.from(parts[1], 'hex');
       const encrypted = Buffer.from(parts[2], 'hex');
@@ -54,7 +54,7 @@ export class EncryptionService {
       return decrypted.toString('utf8');
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      // Handle potential errors during decryption, e.g., tampered data
+      // This now only catches crypto errors, not my format validation error.
       throw new Error(
         'Decryption failed. Data may be corrupted or tampered with.',
       );
