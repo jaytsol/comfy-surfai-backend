@@ -4,7 +4,6 @@ import { UserService } from './user.service';
 import { User } from 'src/common/entities/user.entity';
 import { AdjustCoinDto } from './dto/adjust-coin.dto';
 import { Role } from 'src/common/enums/role.enum';
-import { ForbiddenException } from '@nestjs/common';
 
 describe('UserController (Admin)', () => {
   let controller: UserController;
@@ -22,6 +21,7 @@ describe('UserController (Admin)', () => {
     generatedOutputs: [],
     workflows: [],
     coinTransactions: [],
+    socialConnections: [],
   };
 
   beforeEach(async () => {
@@ -32,8 +32,12 @@ describe('UserController (Admin)', () => {
           provide: UserService,
           useValue: {
             findAll: jest.fn().mockResolvedValue([mockUser]),
-            addCoin: jest.fn().mockResolvedValue({ ...mockUser, coinBalance: 110 }),
-            deductCoin: jest.fn().mockResolvedValue({ ...mockUser, coinBalance: 90 }),
+            addCoin: jest
+              .fn()
+              .mockResolvedValue({ ...mockUser, coinBalance: 110 }),
+            deductCoin: jest
+              .fn()
+              .mockResolvedValue({ ...mockUser, coinBalance: 90 }),
           },
         },
       ],
