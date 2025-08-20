@@ -29,7 +29,9 @@ export class SocialConnection {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.socialConnections, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.socialConnections, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
   @Column({ type: 'enum', enum: SocialPlatform })

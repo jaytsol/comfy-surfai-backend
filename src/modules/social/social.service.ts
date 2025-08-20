@@ -2,7 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SocialConnection } from './entities/social-connection.entity';
+import {
+  SocialConnection,
+  SocialPlatform,
+} from './entities/social-connection.entity';
 
 @Injectable()
 export class SocialService {
@@ -28,15 +31,23 @@ export class SocialService {
 
   async handleGoogleConnection(state: string, googleUser: any) {
     const { userId } = this.validateState(state);
-
-    // TODO: Encrypt access and refresh tokens before saving.
     const { accessToken, refreshToken, email, firstName, lastName } = googleUser;
 
-    // TODO: Use repository to save the new social connection.
-    // this.socialConnectionsRepository.upsert({ ... });
+    // TODO: Encrypt access and refresh tokens before saving.
+    const connectionToSave = {
+      user: { id: userId },
+      platform: SocialPlatform.YOUTUBE,
+      platformUsername: `${firstName} ${lastName} (${email})`,
+      accessToken: accessToken,
+      connectedAt: new Date(),
+      // Only include refreshToken if it exists
+      ...(refreshToken && { refreshToken: refreshToken }),
+    };
 
-    console.log(`Handling Google connection for SurfAI user ID: ${userId}`);
-    console.log('Google User Profile:', googleUser);
+    await this.socialConnectionsRepository.upsert(connectionToSave, [
+      'platform',
+      'user',
+    ]);
 
     return { message: 'Successfully handled Google connection' };
   }
