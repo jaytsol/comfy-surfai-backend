@@ -1,4 +1,15 @@
-import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { SocialService } from './social.service';
 import { GoogleConnectGuard } from './guards/google-connect.guard';
@@ -37,5 +48,10 @@ export class SocialController {
     return this.socialService.getConnections(req.user.id);
   }
 
-  // TODO: Implement POST /disconnect/:platform
+  @Post('disconnect/:platform')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async disconnectPlatform(@Req() req, @Param('platform') platform: string) {
+    return this.socialService.disconnectPlatform(req.user.id, platform);
+  }
 }

@@ -67,4 +67,18 @@ export class SocialService {
     });
     return connections.map((c) => c.platform);
   }
+
+  async disconnectPlatform(userId: number, platform: string): Promise<void> {
+    const platformEnum = platform.toUpperCase() as SocialPlatform;
+
+    // Optional: Check if the platform is a valid enum value
+    if (!Object.values(SocialPlatform).includes(platformEnum)) {
+      throw new Error(`Invalid platform: ${platform}`);
+    }
+
+    await this.socialConnectionsRepository.delete({
+      user: { id: userId },
+      platform: platformEnum,
+    });
+  }
 }
