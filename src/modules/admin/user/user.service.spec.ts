@@ -25,6 +25,7 @@ describe('UserService (Admin)', () => {
     generatedOutputs: [],
     workflows: [],
     coinTransactions: [],
+    socialConnections: [],
   };
 
   beforeEach(async () => {
