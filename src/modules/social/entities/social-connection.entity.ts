@@ -41,11 +41,11 @@ export class SocialConnection {
   platformUsername: string;
 
   // TODO: Add encryption transformer
-  @Column({ type: 'varchar', length: 512 })
+  @Column({ type: 'text' })
   accessToken: string;
 
   // TODO: Add encryption transformer
-  @Column({ type: 'varchar', length: 512, nullable: true })
+  @Column({ type: 'text', nullable: true })
   refreshToken?: string;
 
   @Column({ type: 'timestamptz' })

@@ -9,10 +9,11 @@ export class GoogleYouTubeStrategy extends PassportStrategy(
   'google-youtube',
 ) {
   constructor(private readonly configService: ConfigService) {
+    const callbackURL = configService.get('GOOGLE_YOUTUBE_CALLBACK_URL');
     super({
       clientID: configService.get('GOOGLE_CLIENT_ID'),
       clientSecret: configService.get('GOOGLE_CLIENT_SECRET'),
-      callbackURL: configService.get('GOOGLE_YOUTUBE_CALLBACK_URL'),
+      callbackURL: callbackURL,
       scope: [
         'email',
         'profile',

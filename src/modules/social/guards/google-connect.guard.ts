@@ -10,7 +10,14 @@ export class GoogleConnectGuard extends AuthGuard('google-youtube') {
 
   getAuthenticateOptions(context: ExecutionContext): any {
     const req = context.switchToHttp().getRequest();
-    const state = this.socialService.generateState(req.user.id);
-    return { state };
+
+    // Only generate state for the initial /connect/google request
+    // The callback /connect/google/callback does not need to generate state
+    if (req.route.path === '/connect/google') {
+      const state = this.socialService.generateState(req.user.id);
+      return { state };
+    }
+    // For the callback, we don't need to pass any specific options to the strategy's authenticate method
+    return undefined;
   }
 }

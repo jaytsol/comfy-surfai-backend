@@ -9,12 +9,15 @@ export class EncryptionService {
 
   constructor(private readonly configService: ConfigService) {
     const secret = this.configService.get<string>('ENCRYPTION_KEY');
+    console.log('ENCRYPTION_KEY (from ConfigService):', secret);
     if (!secret || secret.length !== 64) {
+      console.error('Invalid ENCRYPTION_KEY length or format:', secret);
       throw new Error(
         'ENCRYPTION_KEY must be a 64-character hex string (32 bytes).',
       );
     }
     this.key = Buffer.from(secret, 'hex');
+    console.log('Encryption key buffer length:', this.key.length);
   }
 
   encrypt(text: string): string {
@@ -52,7 +55,6 @@ export class EncryptionService {
       ]);
 
       return decrypted.toString('utf8');
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // This now only catches crypto errors, not my format validation error.
       throw new Error(
