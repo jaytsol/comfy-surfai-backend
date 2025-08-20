@@ -1,28 +1,34 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { SocialService } from './social.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { GoogleConnectGuard } from './guards/google-connect.guard';
+import { ConfigService } from '@nestjs/config';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @Controller('connect')
 export class SocialController {
-  constructor(private readonly socialService: SocialService) {}
+  constructor(
+    private readonly socialService: SocialService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get('google')
-  @UseGuards(JwtAuthGuard, AuthGuard('google-youtube'))
-  async connectGoogle(@Req() req) {
-    // This route will redirect to Google for authentication
-    // The guards ensure the user is logged into our service first,
-    // then redirects them to Google.
+  @UseGuards(JwtAuthGuard, GoogleConnectGuard)
+  async connectGoogle() {
+    // The GoogleConnectGuard will handle the redirection to Google with a state parameter.
   }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google-youtube'))
-  async googleCallback(@Req() req) {
-    // The google-youtube guard has populated req.user with the Google profile and tokens.
-    // We now need to associate this with the logged-in SurfAI user.
-    // TODO: Pass the SurfAI user from the initial request (e.g., via state parameter)
-    // For now, we pass the Google user data to the service.
-    return this.socialService.handleGoogleConnection(req.user);
+  @UseGuards(GoogleConnectGuard)
+  async googleCallback(
+    @Req() req,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
+    await this.socialService.handleGoogleConnection(state, req.user);
+    // Redirect user back to the frontend settings page after successful connection
+    const frontendUrl = this.configService.get('FRONTEND_URL');
+    res.redirect(`${frontendUrl}/settings/connections`);
   }
 
   // TODO: Implement GET /connections

@@ -20,10 +20,12 @@ export class GoogleYouTubeStrategy extends PassportStrategy(
       ],
       accessType: 'offline', // To get a refresh token
       prompt: 'consent', // To ensure a refresh token is provided every time
+      passReqToCallback: true,
     } as any);
   }
 
   validate(
+    req: any, // request object to access state
     accessToken: string,
     refreshToken: string,
     profile: any,
