@@ -39,7 +39,7 @@ export class SocialController {
     await this.socialService.handleGoogleConnection(state, req.user);
     // Redirect user back to the frontend settings page after successful connection
     const frontendUrl = this.configService.get('FRONTEND_URL');
-    res.redirect(`${frontendUrl}/settings/connections`);
+    res.redirect(`${frontendUrl}/settings`);
   }
 
   @Get('connections')
