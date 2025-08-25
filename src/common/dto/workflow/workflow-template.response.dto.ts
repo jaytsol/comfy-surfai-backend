@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WorkflowParameterMappingItem } from 'src/common/interfaces/workflow.interface';
+import { Expose } from 'class-transformer';
 
 export class WorkflowTemplateResponseDTO {
   @ApiProperty({ example: 1, description: '워크플로우 템플릿의 고유 ID' })
@@ -57,6 +58,13 @@ export class WorkflowTemplateResponseDTO {
     description: '태그 배열',
   })
   tags?: string[];
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: '필수 이미지 입력 개수',
+  })
+  @Expose()
+  requiredImageCount?: number;
 
   @ApiProperty({
     example: 1,

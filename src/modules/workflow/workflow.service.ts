@@ -159,16 +159,22 @@ export class WorkflowService {
       existingTemplate,
       updateDTO,
     );
-
     return this.workflowRepository.save(updatedTemplate);
   }
 
   async findAllTemplates(
     paginationDto: PaginationDto,
+    isPublic?: boolean, // New parameter
   ): Promise<PaginatedResponse<Workflow>> {
     const { page = 1, limit = 10 } = paginationDto;
+
+    const whereClause: any = { isTemplate: true };
+    if (isPublic) {
+      whereClause.isPublicTemplate = true;
+    }
+
     const [data, total] = await this.workflowRepository.findAndCount({
-      where: { isTemplate: true },
+      where: whereClause,
       order: { createdAt: 'DESC' },
       take: limit,
       skip: (page - 1) * limit,

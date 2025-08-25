@@ -392,6 +392,26 @@ export class ComfyUIService implements OnModuleInit {
       }
     }
 
+    let uploadedSecondInputImageName: string | undefined;
+    if (generateDTO.secondInputImage) {
+      try {
+        const uploadedImage = await this.uploadBase64ImageToComfyUI(
+          generateDTO.secondInputImage,
+        );
+        uploadedSecondInputImageName = uploadedImage.name;
+        console.log(
+          `[ComfyUIService] Uploaded second input image to ComfyUI: ${uploadedSecondInputImageName}`,
+        );
+      } catch (error) {
+        console.error(
+          `[ComfyUIService] Failed to upload second input image: ${error.message}`,
+        );
+        throw new InternalServerErrorException(
+          '두 번째 입력 이미지 업로드에 실패했습니다.',
+        );
+      }
+    }
+
     if (generateDTO.parameters && parameterMap) {
       const unknownParams = Object.keys(generateDTO.parameters).filter(
         (p) => !Object.hasOwn(parameterMap, p),
@@ -409,11 +429,6 @@ export class ComfyUIService implements OnModuleInit {
         if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
           let finalValue = paramValue;
 
-          // input_image 파라미터가 있고, 이미 업로드된 이미지가 있다면 그 파일명을 사용
-          if (paramKey === 'input_image' && uploadedInputImageName) {
-            finalValue = uploadedInputImageName;
-          }
-
           if (paramKey === 'seed' && Number(finalValue) === -1) {
             finalValue = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
             console.log(
@@ -425,6 +440,21 @@ export class ComfyUIService implements OnModuleInit {
             mappingInfo.input_name
           ] = finalValue;
         }
+      }
+    }
+
+    // Handle input images outside the general parameters loop
+    if (uploadedInputImageName) {
+      const mappingInfo = parameterMap?.input_image; // Assuming 'input_image' is the key for the first image
+      if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
+        modifiedDefinition[mappingInfo.node_id].inputs[mappingInfo.input_name] = uploadedInputImageName;
+      }
+    }
+
+    if (uploadedSecondInputImageName) {
+      const mappingInfo = parameterMap?.second_input_image; // Assuming 'second_input_image' is the key for the second image
+      if (mappingInfo && modifiedDefinition[mappingInfo.node_id]?.inputs) {
+        modifiedDefinition[mappingInfo.node_id].inputs[mappingInfo.input_name] = uploadedSecondInputImageName;
       }
     }
 

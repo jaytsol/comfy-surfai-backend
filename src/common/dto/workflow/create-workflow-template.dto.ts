@@ -64,6 +64,14 @@ export class CreateWorkflowTemplateDTO {
   tags?: string[];
 
   @ApiPropertyOptional({
+    description: '필수 이미지 입력 개수',
+    example: 1,
+  })
+  @IsNumber()
+  @IsOptional()
+  requiredImageCount?: number = 0;
+
+  @ApiPropertyOptional({
     description: '템플릿 공개 여부',
     default: false,
   })

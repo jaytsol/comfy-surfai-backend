@@ -12,4 +12,8 @@ export class UpdateWorkflowTemplateDTO extends PartialType(
   @IsNumber()
   @IsOptional()
   cost?: number;
+
+  @IsNumber()
+  @IsOptional()
+  requiredImageCount?: number;
 }

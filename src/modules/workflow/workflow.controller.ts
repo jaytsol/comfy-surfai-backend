@@ -178,6 +178,7 @@ export class WorkflowController {
     responseDTO.tags = workflow.tags;
     responseDTO.cost = workflow.cost;
     responseDTO.isPublicTemplate = workflow.isPublicTemplate;
+    responseDTO.requiredImageCount = workflow.requiredImageCount;
     responseDTO.ownerUserId = workflow.ownerUserId;
     responseDTO.createdAt = workflow.createdAt;
     responseDTO.updatedAt = workflow.updatedAt;
