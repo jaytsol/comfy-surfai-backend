@@ -43,7 +43,8 @@ export class GenerateImageDTO {
     description: 'Base64 인코딩된 입력 이미지 데이터 (선택 사항)',
     type: 'string',
     format: 'base64',
-    example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==',
+    example:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==',
   })
   @IsString({ message: 'inputImage는 Base64 문자열이어야 합니다.' })
   @IsOptional()
