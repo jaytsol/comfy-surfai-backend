@@ -6,11 +6,11 @@ import { AuthGuard } from '@nestjs/passport';
 export class JwtAuthGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const result = (await super.canActivate(context)) as boolean;
-    const request = context.switchToHttp().getRequest();
-    console.log(
-      'req.user in JwtAuthGuard (after super.canActivate):',
-      request.user,
-    );
+    // const request = context.switchToHttp().getRequest();
+    // console.log(
+    //   'req.user in JwtAuthGuard (after super.canActivate):',
+    //   request.user,
+    // );
     return result;
   }
 }

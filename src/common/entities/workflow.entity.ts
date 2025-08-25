@@ -46,6 +46,9 @@ export class Workflow {
   })
   parameter_map?: Record<string, WorkflowParameterMappingItemDTO>;
 
+  @Column({ type: 'int', default: 0, comment: 'Number of required image inputs for the template' })
+  requiredImageCount: number;
+
   @Column({ type: 'text', nullable: true })
   previewImageUrl?: string;
 

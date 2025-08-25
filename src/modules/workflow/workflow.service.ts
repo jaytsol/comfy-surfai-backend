@@ -159,7 +159,6 @@ export class WorkflowService {
       existingTemplate,
       updateDTO,
     );
-
     return this.workflowRepository.save(updatedTemplate);
   }
 
