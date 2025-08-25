@@ -26,6 +26,7 @@ export class SocialService {
     try {
       const payload = this.jwtService.verify(state);
       return { userId: payload.sub };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new UnauthorizedException('Invalid state token');
     }
