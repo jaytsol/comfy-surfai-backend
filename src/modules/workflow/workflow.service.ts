@@ -39,17 +39,17 @@ export class WorkflowService {
       throw new BadRequestException('중복된 파라미터 키가 존재합니다.');
     }
 
-    const essentialKeys = PARAMETER_PRESETS.filter((p) =>
-      p.essentialForCategories?.includes(category),
-    ).map((p) => p.key);
+    // const essentialKeys = PARAMETER_PRESETS.filter((p) =>
+    //   p.essentialForCategories?.includes(category),
+    // ).map((p) => p.key);
 
-    for (const essentialKey of essentialKeys) {
-      if (!parameterMap[essentialKey]) {
-        throw new BadRequestException(
-          `필수 파라미터 '${essentialKey}'가 누락되었습니다.`,
-        );
-      }
-    }
+    // for (const essentialKey of essentialKeys) {
+    //   if (!parameterMap[essentialKey]) {
+    //     throw new BadRequestException(
+    //       `필수 파라미터 '${essentialKey}'가 누락되었습니다.`,
+    //     );
+    //   }
+    // }
 
     for (const key in parameterMap) {
       if (Object.prototype.hasOwnProperty.call(parameterMap, key)) {
