@@ -392,6 +392,26 @@ export class ComfyUIService implements OnModuleInit {
       }
     }
 
+    let uploadedSecondInputImageName: string | undefined;
+    if (generateDTO.secondInputImage) {
+      try {
+        const uploadedImage = await this.uploadBase64ImageToComfyUI(
+          generateDTO.secondInputImage,
+        );
+        uploadedSecondInputImageName = uploadedImage.name;
+        console.log(
+          `[ComfyUIService] Uploaded second input image to ComfyUI: ${uploadedSecondInputImageName}`,
+        );
+      } catch (error) {
+        console.error(
+          `[ComfyUIService] Failed to upload second input image: ${error.message}`,
+        );
+        throw new InternalServerErrorException(
+          '두 번째 입력 이미지 업로드에 실패했습니다.',
+        );
+      }
+    }
+
     if (generateDTO.parameters && parameterMap) {
       const unknownParams = Object.keys(generateDTO.parameters).filter(
         (p) => !Object.hasOwn(parameterMap, p),
@@ -412,6 +432,8 @@ export class ComfyUIService implements OnModuleInit {
           // input_image 파라미터가 있고, 이미 업로드된 이미지가 있다면 그 파일명을 사용
           if (paramKey === 'input_image' && uploadedInputImageName) {
             finalValue = uploadedInputImageName;
+          } else if (paramKey === 'second_input_image' && uploadedSecondInputImageName) {
+            finalValue = uploadedSecondInputImageName;
           }
 
           if (paramKey === 'seed' && Number(finalValue) === -1) {
