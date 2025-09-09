@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { LangchainService } from './langchain.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @Controller('langchain')
 export class LangchainController {
