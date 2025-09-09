@@ -20,6 +20,7 @@ import { CoinTransaction } from './common/entities/coin-transaction.entity'; // 
 import { CoinModule } from './coin/coin.module';
 import { SocialModule } from './modules/social/social.module';
 import { SocialConnection } from './modules/social/entities/social-connection.entity';
+import { LangchainModule } from './langchain/langchain.module';
 
 const configService = new ConfigService();
 
@@ -42,10 +43,10 @@ const configService = new ConfigService();
         GeneratedOutput,
         CoinTransaction,
         SocialConnection,
-      ], // CoinTransaction 엔티티 추가
-      synchronize: false, // 마이그레이션 사용을 위해 false로 설정
+      ],
+      synchronize: false,
       logging: true,
-      migrations: [__dirname + '/migrations/**/*.js'], // 마이그레이션 파일 경로
+      migrations: [__dirname + '/migrations/**/*.js'],
     }),
     AuthModule,
     ComfyUIModule,
@@ -53,8 +54,9 @@ const configService = new ConfigService();
     WorkflowModule,
     StorageModule,
     AdminModule,
-    CoinModule, // CoinModule 추가
+    CoinModule,
     SocialModule,
+    LangchainModule,
   ],
   controllers: [AppController, ComfyUIController],
   providers: [AppService, ComfyUIService, EventsGateway],
