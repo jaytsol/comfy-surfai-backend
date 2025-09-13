@@ -28,6 +28,19 @@ export class RagService {
     private readonly langchainService: LangchainService,
   ) {}
 
+  async getDocumentsForUser(user: User): Promise<RagDocument[]> {
+    const documents = await this.ragDocumentRepository.find({
+      where: { ownerUserId: user.id },
+      order: { createdAt: 'DESC' },
+    });
+
+    // Return public URLs for the frontend
+    return documents.map((doc) => ({
+      ...doc,
+      r2Url: this.storageService.getFileUrl(doc.r2Url),
+    }));
+  }
+
   async uploadDocument(
     file: Express.Multer.File,
     user: User,
@@ -42,7 +55,7 @@ export class RagService {
     const uniqueFileName = `${baseName}-${randomUUID()}${fileExtension}`;
     const uploadPath = path.join(`rag-documents/${user.id}`, uniqueFileName);
 
-    const r2Url = await this.storageService.uploadFile(
+    await this.storageService.uploadFile(
       uploadPath,
       file.buffer,
       file.mimetype,

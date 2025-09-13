@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get, // Add Get
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -17,6 +18,12 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 export class RagController {
   constructor(private readonly ragService: RagService) {}
+
+  @Get()
+  async getDocuments(@Req() req) {
+    const user = req.user as User;
+    return this.ragService.getDocumentsForUser(user);
+  }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
