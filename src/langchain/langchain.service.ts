@@ -34,19 +34,18 @@ export class LangchainService {
     this.internalApiKey = internalApiKey;
   }
 
-  private async postToLangchain<T>(endpoint: string, data: unknown): Promise<T> {
+  private async postToLangchain<T>(
+    endpoint: string,
+    data: unknown,
+  ): Promise<T> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post<T>(
-          `${this.langchainApiUrl}${endpoint}`,
-          data,
-          {
-            headers: {
-              'X-Internal-API-Key': this.internalApiKey,
-              'Content-Type': 'application/json',
-            },
+        this.httpService.post<T>(`${this.langchainApiUrl}${endpoint}`, data, {
+          headers: {
+            'X-Internal-API-Key': this.internalApiKey,
+            'Content-Type': 'application/json',
           },
-        ),
+        }),
       );
       return response.data;
     } catch (error) {
