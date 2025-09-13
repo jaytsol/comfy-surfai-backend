@@ -11,13 +11,13 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class LangchainService {
   private readonly logger = new Logger(LangchainService.name);
+  private readonly langchainApiUrl: string;
+  private readonly internalApiKey: string;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-  ) {}
-
-  async chat(prompt: string): Promise<string> {
+  ) {
     const langchainApiUrl = this.configService.get<string>('LANGCHAIN_API_URL');
     const internalApiKey = this.configService.get<string>(
       'LANGCHAIN_INTERNAL_API_KEY',
@@ -30,30 +30,35 @@ export class LangchainService {
       );
     }
 
+    this.langchainApiUrl = langchainApiUrl;
+    this.internalApiKey = internalApiKey;
+  }
+
+  private async postToLangchain<T>(endpoint: string, data: unknown): Promise<T> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post<{ response: string }>(
-          `${langchainApiUrl}/api/v1/chat`,
-          { prompt },
+        this.httpService.post<T>(
+          `${this.langchainApiUrl}${endpoint}`,
+          data,
           {
             headers: {
-              'X-Internal-API-Key': internalApiKey,
+              'X-Internal-API-Key': this.internalApiKey,
               'Content-Type': 'application/json',
             },
           },
         ),
       );
-      return response.data.response;
+      return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
         this.logger.error(
-          `Error calling Langchain service: ${error.message}`,
+          `Error calling Langchain service at ${endpoint}: ${error.message}`,
           error.stack,
         );
         this.logger.error('Response data:', error.response?.data);
       } else {
         this.logger.error(
-          `An unexpected error occurred: ${error.message}`,
+          `An unexpected error occurred at ${endpoint}: ${error.message}`,
           error.stack,
         );
       }
@@ -61,5 +66,21 @@ export class LangchainService {
         'LLM 서비스 호출 중 오류가 발생했습니다.',
       );
     }
+  }
+
+  async chat(prompt: string): Promise<string> {
+    const result = await this.postToLangchain<{ response: string }>(
+      '/api/v1/chat',
+      { prompt },
+    );
+    return result.response;
+  }
+
+  async processRagDocument(documentId: number, r2Url: string): Promise<void> {
+    await this.postToLangchain('/api/v1/rag/process', { documentId, r2Url });
+  }
+
+  async queryRagDocument(documentId: number, message: string): Promise<any> {
+    return this.postToLangchain('/api/v1/rag/query', { documentId, message });
   }
 }
