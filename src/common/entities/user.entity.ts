@@ -11,6 +11,7 @@ import { Workflow } from './workflow.entity';
 import { CoinTransaction } from './coin-transaction.entity';
 import { Role } from '../enums/role.enum';
 import { SocialConnection } from '../../modules/social/entities/social-connection.entity';
+import { RagDocument } from './rag-document.entity';
 
 @Entity('users')
 export class User {
@@ -63,6 +64,9 @@ export class User {
     (socialConnection) => socialConnection.user,
   )
   socialConnections: SocialConnection[];
+
+  @OneToMany(() => RagDocument, (ragDocument) => ragDocument.owner)
+  ragDocuments: RagDocument[];
 
   @CreateDateColumn()
   createdAt: Date;
