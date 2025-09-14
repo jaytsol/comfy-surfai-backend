@@ -54,8 +54,8 @@ export class RagService {
     const baseName = path.basename(file.originalname, fileExtension);
     const uniqueId = randomUUID();
 
-    // Replace spaces with underscores for R2 key to avoid encoding issues
-    const safeBaseName = baseName.replace(/\s/g, '_');
+    // Replace spaces AND '+' signs with underscores for R2 key
+    const safeBaseName = baseName.replace(/[\s+]/g, '_');
     const uploadPath = `rag-documents/${user.id}/${safeBaseName}-${uniqueId}${fileExtension}`; // Construct path with safeBaseName and original extension
 
     await this.storageService.uploadFile(
