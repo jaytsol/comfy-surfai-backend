@@ -54,15 +54,12 @@ export class RagService {
     const baseName = path.basename(file.originalname, fileExtension);
     const uniqueId = randomUUID();
 
-    // Fully URL-encode the filename part to be safe for S3 keys
-    // This will turn spaces into %20 and literal '+' into %2B
-    const encodedOriginalFilename = encodeURIComponent(
-      baseName + fileExtension,
-    );
-    const uploadPath = `rag-documents/${user.id}/${encodedOriginalFilename}-${uniqueId}`; // Construct path with encoded filename
+    // Replace spaces with underscores for R2 key to avoid encoding issues
+    const safeBaseName = baseName.replace(/\s/g, '_');
+    const uploadPath = `rag-documents/${user.id}/${safeBaseName}-${uniqueId}${fileExtension}`; // Construct path with safeBaseName and original extension
 
     await this.storageService.uploadFile(
-      uploadPath,
+      uploadPath, // This will be the key in R2
       file.buffer,
       file.mimetype,
     );
