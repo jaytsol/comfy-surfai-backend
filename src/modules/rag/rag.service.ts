@@ -68,7 +68,7 @@ export class RagService {
     const newDocument = this.ragDocumentRepository.create({
       ownerUserId: user.id,
       originalFilename: file.originalname, // Keep original for display
-      r2Url: uploadPath, // Store the fully URL-encoded path
+      r2Url: uploadPath, // Store the path with underscores here!
       mimeType: file.mimetype,
       status: RagDocumentStatus.UPLOADED,
     });
@@ -77,7 +77,7 @@ export class RagService {
 
     // 3. Trigger async processing (don't await)
     void this.langchainService
-      .processRagDocument(savedDocument.id, uploadPath) // Pass the fully URL-encoded path
+      .processRagDocument(savedDocument.id, uploadPath) // Pass the path with underscores
       .catch((err) => {
         console.error(`Failed to process document ${savedDocument.id}:`, err);
         void this.ragDocumentRepository.update(savedDocument.id, {
