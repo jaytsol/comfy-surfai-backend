@@ -52,8 +52,14 @@ export class RagService {
     // 1. Create a unique file name and upload to R2
     const fileExtension = path.extname(file.originalname);
     const baseName = path.basename(file.originalname, fileExtension);
-    const uniqueFileName = `${baseName}-${randomUUID()}${fileExtension}`;
-    const uploadPath = path.join(`rag-documents/${user.id}`, uniqueFileName);
+    const uniqueId = randomUUID();
+
+    // Fully URL-encode the filename part to be safe for S3 keys
+    // This will turn spaces into %20 and literal '+' into %2B
+    const encodedOriginalFilename = encodeURIComponent(
+      baseName + fileExtension,
+    );
+    const uploadPath = `rag-documents/${user.id}/${encodedOriginalFilename}-${uniqueId}`; // Construct path with encoded filename
 
     await this.storageService.uploadFile(
       uploadPath,
@@ -64,8 +70,8 @@ export class RagService {
     // 2. Save metadata to DB
     const newDocument = this.ragDocumentRepository.create({
       ownerUserId: user.id,
-      originalFilename: file.originalname,
-      r2Url: uploadPath, // Store the path, not the full public URL
+      originalFilename: file.originalname, // Keep original for display
+      r2Url: uploadPath, // Store the fully URL-encoded path
       mimeType: file.mimetype,
       status: RagDocumentStatus.UPLOADED,
     });
@@ -74,7 +80,7 @@ export class RagService {
 
     // 3. Trigger async processing (don't await)
     void this.langchainService
-      .processRagDocument(savedDocument.id, uploadPath)
+      .processRagDocument(savedDocument.id, uploadPath) // Pass the fully URL-encoded path
       .catch((err) => {
         console.error(`Failed to process document ${savedDocument.id}:`, err);
         void this.ragDocumentRepository.update(savedDocument.id, {
