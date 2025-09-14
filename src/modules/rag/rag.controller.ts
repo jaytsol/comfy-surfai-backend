@@ -28,6 +28,24 @@ export class RagController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadDocument(@UploadedFile() file: Express.Multer.File, @Req() req) {
+    let decodedFilename = file.originalname;
+    try {
+      decodedFilename = decodeURIComponent(escape(file.originalname));
+    } catch (e) {
+      console.warn(
+        'Failed to decode filename using escape/decodeURIComponent:',
+        e,
+      );
+    }
+
+    console.log('Received file.originalname (raw):', file.originalname);
+    console.log(
+      'Received file.originalname (decoded attempt):',
+      decodedFilename,
+    );
+
+    file.originalname = decodedFilename; // Overwrite for consistency
+
     const user = req.user as User;
     return this.ragService.uploadDocument(file, user);
   }
