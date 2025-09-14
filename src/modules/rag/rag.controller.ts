@@ -1,7 +1,7 @@
 import {
   Controller,
   Post,
-  Get, // Add Get
+  Get,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -38,13 +38,7 @@ export class RagController {
       );
     }
 
-    console.log('Received file.originalname (raw):', file.originalname);
-    console.log(
-      'Received file.originalname (decoded attempt):',
-      decodedFilename,
-    );
-
-    file.originalname = decodedFilename; // Overwrite for consistency
+    file.originalname = decodedFilename;
 
     const user = req.user as User;
     return this.ragService.uploadDocument(file, user);
