@@ -76,10 +76,16 @@ export class LangchainService {
   }
 
   async processRagDocument(documentId: number, r2Url: string): Promise<void> {
-    await this.postToLangchain('/api/v1/rag/process', { documentId, r2Url });
+    await this.postToLangchain('/api/v1/rag/process', {
+      document_id: documentId,
+      r2_url: r2Url,
+    });
   }
 
   async queryRagDocument(documentId: number, message: string): Promise<any> {
-    return this.postToLangchain('/api/v1/rag/query', { documentId, message });
+    return this.postToLangchain('/api/v1/rag/query', {
+      document_id: documentId,
+      message: message,
+    });
   }
 }
